@@ -8,14 +8,14 @@ import warnings
 import filetype
 from scipy.io.wavfile import read
 
-from data_processing import normalizeSoundRecognizing, eliminateAmbienceRecognizing
+from data_processing import normalizeSoundRecognizing, eliminateAmbienceRecognizing, recognizeSpectrogram
 from feature_extraction import extract_features
 
 warnings.simplefilter("ignore")
 
 # HYPERPARAMETERS
-ROOT_DIR = os.path.dirname(os.path.dirname(__file__)) + '/'
-DATABASE_DIR = './users/'
+ROOT_DIR = os.path.dirname(os.path.dirname(__file__))
+DATABASE_DIR = ROOT_DIR + '/users/'
 FORMAT = pyaudio.paInt16
 CHANNELS = 2
 RATE = 44100
@@ -56,6 +56,7 @@ def recognize_voice(name):
     # data preprocessing
     normalizeSoundRecognizing(name)
     eliminateAmbienceRecognizing(name)
+    # recognizeSpectrogram(name)
 
     # read the test files
     sr, audio = read(test_file_dir + "loginAttempt.wav")
