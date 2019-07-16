@@ -24,8 +24,14 @@ def trainingSpectrogram(username):
         freq, times, spectrogram = signal.spectrogram(audio, sr)
 
         plt.pcolormesh(times, freq, spectrogram)
-        plt.imshow(spectrogram, aspect='auto', origin='lower',
+        fig = plt.imshow(spectrogram, aspect='auto', origin='lower',
                    extent=[times.min(), times.max(), freq.min(), freq.max()])
+        fig.axes.get_xaxis().set_visible(False)
+        fig.axes.get_yaxis().set_visible(False)
+        plt.savefig(str(i) + '.png', bbox_inches='tight', dpi=300, transparent=True, pad_inches=0.0)
+        os.rename(str(i) + '.png', source + str(i) + '.png')
+        fig.axes.get_xaxis().set_visible(True)
+        fig.axes.get_yaxis().set_visible(True)
         plt.title("Spectrogram of " + username + ' ' + wav)
         plt.xlabel('Time [sec]')
         plt.ylabel('Frequency [Hz]')
@@ -36,9 +42,14 @@ def recognizeSpectrogram(username):
     source = DATABASE_DIR + username + '/audioComparison/'
     sr, audio = read(source + "loginAttempt.wav")
     freq, times, spectrogram = signal.spectrogram(audio, sr)
-
     plt.pcolormesh(times, freq, spectrogram)
-    plt.imshow(spectrogram, aspect='auto', origin='lower', extent=[times.min(), times.max(), freq.min(), freq.max()])
+    fig = plt.imshow(spectrogram, aspect='auto', origin='lower', extent=[times.min(), times.max(), freq.min(), freq.max()])
+    fig.axes.get_xaxis().set_visible(False)
+    fig.axes.get_yaxis().set_visible(False)
+    plt.savefig('loginAttempt.png', bbox_inches='tight', dpi=300, transparent=True, pad_inches=0.0)
+    os.rename('loginAttempt.png', source + 'loginAttempt.png')
+    fig.axes.get_xaxis().set_visible(True)
+    fig.axes.get_yaxis().set_visible(True)
     plt.title("Spectrogram of " + username + " loginAttempt.wav")
     plt.xlabel('Time [sec]')
     plt.ylabel('Frequency [Hz]')
