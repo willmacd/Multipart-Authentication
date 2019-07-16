@@ -6,6 +6,7 @@ import filetype
 import subprocess
 import sys
 import json
+from keras.datasets import cifar10
 from scipy.io.wavfile import read
 from sklearn.mixture import GaussianMixture as GMM
 
@@ -21,6 +22,8 @@ RATE = 44100
 CHUNK = 1024
 RECORD_SECONDS = 3.5
 
+spect_size = 240
+
 # fetch data passed through PythonShell from app.js
 lines = sys.stdin.readline()
 data = json.loads(lines)
@@ -33,6 +36,10 @@ def train_gmm(name):
     destination = DATABASE_DIR + name + '/gmm-model/'
 
     count = 1
+
+    ######################
+    # data preprocessing #
+    ######################
 
     for path in os.listdir(source):
         path = os.path.join(source, path)
@@ -47,10 +54,17 @@ def train_gmm(name):
             os.remove(path)
             os.rename('./' + fname, path)
 
-    # data preprocessing
     normalizeSoundTraining(name)
     eliminateAmbienceTraining(name)
     # trainingSpectrogram(name)
+
+    ##################
+    # Building Model #
+    ##################
+
+    # if data['model'] is None:
+    #     SPECT_SHAPE = (spect_size, spect_size, 3)
+
 
     for path in os.listdir(source):
         features = np.array([])
