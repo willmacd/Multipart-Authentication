@@ -9,12 +9,12 @@ import json
 from scipy.io.wavfile import read
 from sklearn.mixture import GaussianMixture as GMM
 
-from data_processing import normalizeSoundTraining, eliminateAmbienceTraining
+from data_processing import normalizeSoundTraining, eliminateAmbienceTraining, trainingSpectrogram
 from feature_extraction import extract_features
 
 # HYPERPARAMETERS
-ROOT_DIR = os.path.dirname(os.path.dirname(__file__)) + '/'
-DATABASE_DIR = './users/'
+ROOT_DIR = os.path.dirname(os.path.dirname(__file__))
+DATABASE_DIR = ROOT_DIR + '/users/'
 FORMAT = pyaudio.paInt16
 CHANNELS = 2
 RATE = 44100
@@ -50,6 +50,7 @@ def train_gmm(name):
     # data preprocessing
     normalizeSoundTraining(name)
     eliminateAmbienceTraining(name)
+    # trainingSpectrogram(name)
 
     for path in os.listdir(source):
         features = np.array([])
