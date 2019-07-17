@@ -131,7 +131,7 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
             if (req.body.data === false) {
                 return res.status(400).send('No files were uploaded.');
             }
-
+            // todo change file system according to the new database structure
             db.collection('users').find({ "name": req.body.name }).toArray(function (err, results) {
                 if (err) return console.log(err);
                 if (results.length === 0) {
@@ -139,16 +139,19 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                     let parentDir = "./users/" + req.body.name + "/";
                     let trainDir = parentDir + "training/";
                     let validationDir = parentDir + "validation/";
-                    let audioDir = parentDir + "audio/";
-                    let gmmDir = parentDir + "gmm-model/";
-
+                    let audioValidationDir = parentDir + "audioValidation/";
+                    let audioTrainingDir = parentDir + "audioTraining/";
+                    //let gmmDir = parentDir + "gmm-model/";
+                    //todo remove gmm model from directories
                     let data = {
                         name: req.body.name,
                         trainDir: trainDir,
                         validationDir: validationDir,
                         modelDir: "models/" + req.body.name + "/",
-                        audioDir: audioDir,
-                        gmmDir: gmmDir,
+                        audioTrainingDir: audioTrainingDir,
+                        audioValidationDir: audioValidationDir,
+                        audioModelDir: "models/" + req.body.name + "audio/",
+                        //gmmDir: gmmDir,
                         subscription: subscription,
                     };
 
@@ -156,8 +159,13 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                         fs.mkdirSync(parentDir);
                         fs.mkdirSync(validationDir);
                         fs.mkdirSync(trainDir);
-                        fs.mkdirSync(audioDir);
-                        fs.mkdirSync(gmmDir);
+                        fs.mkdirSync(audioValidationDir);
+                        fs.mkdirSync(audioTrainingDir);
+                        //fs.mkdirSync(gmmDir);
+                        fs.mkdirSync(audioValidationDir + "user/");
+                        fs.mkdirSync(audioTrainingDir + "user/");
+                        fs.mkdirSync(audioValidationDir + "not/");
+                        fs.mkdirSync(audioTrainingDir + "not/");
                         fs.mkdirSync(validationDir + "user/");
                         fs.mkdirSync(trainDir + "user/");
                         fs.mkdirSync(validationDir + "not/");
