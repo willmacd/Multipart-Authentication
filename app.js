@@ -140,7 +140,7 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                     let trainDir = parentDir + "training/";
                     let validationDir = parentDir + "validation/";
                     let audioValidationDir = parentDir + "audioValidation/";
-                    let audioTrainingDir = parentDir + "audioTraining/";
+                    let audioTrainDir = parentDir + "audioTraining/";
                     //let gmmDir = parentDir + "gmm-model/";
                     //todo remove gmm model from directories
                     let data = {
@@ -148,7 +148,7 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                         trainDir: trainDir,
                         validationDir: validationDir,
                         modelDir: "models/" + req.body.name + "/",
-                        audioTrainingDir: audioTrainingDir,
+                        audioTrainDir: audioTrainDir,
                         audioValidationDir: audioValidationDir,
                         audioModelDir: "models/" + req.body.name + "audio/",
                         //gmmDir: gmmDir,
@@ -160,12 +160,12 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                         fs.mkdirSync(validationDir);
                         fs.mkdirSync(trainDir);
                         fs.mkdirSync(audioValidationDir);
-                        fs.mkdirSync(audioTrainingDir);
+                        fs.mkdirSync(audioTrainDir);
                         //fs.mkdirSync(gmmDir);
                         fs.mkdirSync(audioValidationDir + "user/");
-                        fs.mkdirSync(audioTrainingDir + "user/");
+                        fs.mkdirSync(audioTrainDir + "user/");
                         fs.mkdirSync(audioValidationDir + "not/");
-                        fs.mkdirSync(audioTrainingDir + "not/");
+                        fs.mkdirSync(audioTrainDir + "not/");
                         fs.mkdirSync(validationDir + "user/");
                         fs.mkdirSync(trainDir + "user/");
                         fs.mkdirSync(validationDir + "not/");
@@ -173,7 +173,14 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                     }
 
                     for (let i = 0; i < req.body.audio.length; i++) {
-                        fs.writeFileSync(audioDir + (i + 1).toString() + '.wav', Buffer.from(req.body.audio[i].toString().replace('data:audio/wav;base64,', ''), 'base64'));
+                        if (i > 3){
+                            fs.writeFileSync(audioValidationDir + "user/" + (i + 1).toString() + '.wav',
+                                Buffer.from(req.body.audio[i].toString().replace('data:audio/wav;base64,', ''), 'base64'));
+                        }
+                        else {
+                            fs.writeFileSync(audioTrainDir + "user/" + (i + 1).toString() + '.wav',
+                                Buffer.from(req.body.audio[i].toString().replace('data:audio/wav;base64,', ''), 'base64'));
+                        }
                     }
 
                     for (let i = 0; i < req.body.data.length; i++) {
@@ -191,10 +198,23 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                         }
                     }
 
-                    let gmmShell = new PythonShell('./voice-identifier/train_gmm.py');
-                    gmmShell.send(JSON.stringify({name: req.body.name}));
-                    gmmShell.on('message', (message) => {
-                        console.log(message);
+                    ncp('./randomSpectrograms', audioTrainDir + "not/", (err) => {
+                        if (err) {
+                            res.send(err)
+                        }
+                        else{
+                            ncp('./randomSpectrograms', audioValidationDir + 'not/', (err) => {
+                                if (err) {
+                                    res.send(err)
+                                } else {
+                                    let audioShell = new PythonShell('./voice-identifier/trainAudio.py');
+                                    audioShell.send(JSON.stringify({name: req.body.name, trainingDir: audioTrainDir, validationDir: audioValidationDir, epochs: 10, model: null }));
+                                    audioShell.on('message', (message) => {
+                                        console.log(message);
+                                    });
+                                }
+                            })
+                        }
                     });
 
                     // add none user images to training and validation
