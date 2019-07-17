@@ -1,8 +1,8 @@
 # import the necessary packages
 import os
+import math
+import wave
 from scipy import signal
-from skimage.transform import resize
-from skimage.io import imread
 from scipy.io.wavfile import read
 import matplotlib.pyplot as plt
 import speech_recognition as sr
@@ -11,6 +11,26 @@ from pydub import AudioSegment as AS
 # declaring key directories
 ROOT_DIR = os.path.dirname(os.path.dirname(__file__))
 DATABASE_DIR = ROOT_DIR + '/users/'
+
+
+# trim wav files to a specified length
+def trimWavFile(originPath, outputPath):
+    # desired length of audio file (in milliseconds
+    timeSplit = 3000
+
+    # check duration of specified wave file
+    wav = wave.open(originPath, 'r')
+    frameRate = wav.getframerate()
+    numFrames = wav.getnframes()
+    duration = numFrames/float(frameRate)
+
+    # get the number of times audio file can be split based on time per split and duration
+    multiple = math.floor(divmod(duration, timeSplit/1000)[0])
+    for i in range(multiple):
+        splitNum = len(os.listdir(ROOT_DIR + '/randomSpectrograms/'))
+        splitWav = AS.from_wav(originPath)
+        splitWav = splitWav[timeSplit*i:timeSplit*(i+1)]
+        splitWav.export(str(outputPath) + 'split' + str(splitNum) + '.wav', format='wav')
 
 
 # create a spectrogram for each of the training wav files for a specified user
@@ -29,9 +49,7 @@ def trainingSpectrogram(username):
 
         # reading audio files of speaker
         sr, audio = read(source + wav)
-
         freq, times, spectrogram = signal.spectrogram(audio, sr)
-
         plt.pcolormesh(times, freq, spectrogram)
         fig = plt.imshow(spectrogram, aspect='auto', origin='lower',
                          extent=[times.min(), times.max(), freq.min(), freq.max()])
@@ -39,6 +57,8 @@ def trainingSpectrogram(username):
         fig.axes.get_yaxis().set_visible(False)
         plt.savefig(str(i) + '.png', bbox_inches='tight', dpi=300, transparent=True, pad_inches=0.0)
         os.rename(str(i) + '.png', source + str(i) + '.png')
+        os.unlink(source + wav)
+
         # fig.axes.get_xaxis().set_visible(True)
         # fig.axes.get_yaxis().set_visible(True)
         # plt.title("Spectrogram of " + username + wav)
@@ -47,14 +67,15 @@ def trainingSpectrogram(username):
         # plt.show()
 
 
+# create a spectrogram for each the login attempt wav file
 def recognizeSpectrogram(username):
     source = DATABASE_DIR + username + '/audioComparison/'
-    sr, audio = read(source + "loginAttempt.wav")
 
     # if file already exists, remove it from directory
     if "loginAttempt.png" in os.listdir(source):
         os.unlink(source + "loginAttempt.png")
 
+    sr, audio = read(source + "loginAttempt.wav")
     freq, times, spectrogram = signal.spectrogram(audio, sr)
     plt.pcolormesh(times, freq, spectrogram)
     fig = plt.imshow(spectrogram, aspect='auto', origin='lower', extent=[times.min(), times.max(), freq.min(), freq.max()])
@@ -62,12 +83,14 @@ def recognizeSpectrogram(username):
     fig.axes.get_yaxis().set_visible(False)
     plt.savefig('loginAttempt.png', bbox_inches='tight', dpi=300, transparent=True, pad_inches=0.0)
     os.rename('loginAttempt.png', source + 'loginAttempt.png')
-    fig.axes.get_xaxis().set_visible(True)
-    fig.axes.get_yaxis().set_visible(True)
-    plt.title("Spectrogram of " + username + " loginAttempt.wav")
-    plt.xlabel('Time [sec]')
-    plt.ylabel('Frequency [Hz]')
-    plt.show()
+    source.unlink(source + 'loginAttempt.wav')
+
+    # fig.axes.get_xaxis().set_visible(True)
+    # fig.axes.get_yaxis().set_visible(True)
+    # plt.title("Spectrogram of " + username + " loginAttempt.wav")
+    # plt.xlabel('Time [sec]')
+    # plt.ylabel('Frequency [Hz]')
+    # plt.show()
 
 
 # Normalize the sound of all audio files for training data
@@ -122,6 +145,6 @@ def eliminateAmbienceRecognizing(username):
             file.write(adjusted_audio.get_wav_data())
 
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
     # eliminateAmbienceTraining("Will")
-    trainingSpectrogram("Will")
+    # trainingSpectrogram('Will')

@@ -119,6 +119,7 @@ tuneHistory = model.fit_generator(train_generator,
                                   workers=4,
                                   validation_data=validation_generator,
                                   validation_steps=validation_steps)
+
 # save the model to the appropiate directory
 if data['model'] is None:
     date = time.time()
