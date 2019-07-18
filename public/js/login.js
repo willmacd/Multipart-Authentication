@@ -222,7 +222,7 @@ function startup() {
                 data: {
                     name: $("#name").val(),
                     image: face,
-                    model: './models/' + $("#name").val(),
+                    model: './models/' + $("#name").val() + '/vision.h5',
                 },
                 success: function (response) {
                     console.log(response);
@@ -266,6 +266,7 @@ function startup() {
                 data: {
                     name: $("#name").val(),
                     audio: voice,
+                    model: './models/' + $("#name").val() + '/voice.h5'
                 },
                 success: function (response) {
                     console.log(response);

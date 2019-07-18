@@ -59,7 +59,7 @@ def recognize_voice(name):
     eliminateAmbienceRecognizing(name)
     recognizeSpectrogram(name)
 
-    img64 = str.encode(data['image'])
+    img64 = str.encode(test_file + '/loginAttempt.png')
 
     decode = base64.b64decode(img64)
 
