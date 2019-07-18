@@ -34,14 +34,10 @@ trainingDir = str(data['trainingDir'])
 validationDir = str(data['validationDir'])
 
 
-# todo remove references to gmm model
 def trainAudio(name):
-    # setting paths to database directory and .gmm files in models
+    # setting paths to training file directories
     trainFiles = trainingDir + 'user/'
     validationFiles = validationDir + 'user/'
-    # destination = DATABASE_DIR + name + '/gmm-model/'
-
-    # count = 1
 
     ###################
     # data processing #
@@ -186,33 +182,4 @@ def trainAudio(name):
 
 if __name__ == "__main__":
     trainAudio(name)
-
-'''
-    for path in os.listdir(source):
-        features = np.array([])
-
-        # reading audio files of speaker
-        sr, audio = read(source + path)
-
-        # extract 40 dim MFCC and delta MFCC features
-        vector = extract_features(audio, sr)
-
-        if features.size == 0:
-            features = vector
-        else:
-            features = np.vstack((features, vector))
-
-        # when features of the 5 speaker files are concatenated, then train the model
-        if count == 5:
-            gmm = GMM(n_components=18, max_iter=300, covariance_type='diag', n_init=5)
-            gmm.fit(features)
-
-            # save the trained Gaussian Model
-            pickle.dump(gmm, open(destination + name + '.gmm', 'wb'))
-            print("Model for " + name + "'s voice has successfully been trained")
-
-            features = np.asarray(())
-            count = 0
-        count = count + 1
-'''
 

@@ -14,16 +14,6 @@ ncp.limit = 20;
 
 const app = express();
 const port = process.env.npm_package_config_port || 8080;
-// app.get('/', (req, res) => res.send('Hello World!'))
-
-// let test = new PythonShell('./python/predict.py')
-
-// let img = fs.readFileSync('./users/Max Caplan/validation/user/Max Caplan19.png')
-// test.send(JSON.stringify({ image: Buffer.from(img).toString('base64'), model: "./models/Max Caplan/1560449717.4126756.h5" }))
-
-// test.on('message', (message) => {
-//     console.log(message)
-// })
 
 webPush.setVapidDetails('mailto:maxacaplan@gmail.com', process.env.PUBLIC_KEY, process.env.PRIVATE_KEY);
 
@@ -80,7 +70,7 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
 
         app.post('/register', (req, res) => {
             res.sendStatus(201);
-        })
+        });
 
         app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
         app.use(express.static('public'));
@@ -131,7 +121,7 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
             if (req.body.data === false) {
                 return res.status(400).send('No files were uploaded.');
             }
-            // todo change file system according to the new database structure
+
             db.collection('users').find({ "name": req.body.name }).toArray(function (err, results) {
                 if (err) return console.log(err);
                 if (results.length === 0) {
@@ -141,8 +131,6 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                     let validationDir = parentDir + "validation/";
                     let audioValidationDir = parentDir + "audioValidation/";
                     let audioTrainDir = parentDir + "audioTraining/";
-                    //let gmmDir = parentDir + "gmm-model/";
-                    //todo remove gmm model from directories
                     let data = {
                         name: req.body.name,
                         trainDir: trainDir,
@@ -150,8 +138,6 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                         modelDir: "./models/" + req.body.name + "/",
                         audioTrainDir: audioTrainDir,
                         audioValidationDir: audioValidationDir,
-                        //audioModelDir: "models/" + req.body.name + "/audio/",
-                        //gmmDir: gmmDir,
                         subscription: subscription,
                     };
 
@@ -161,7 +147,6 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                         fs.mkdirSync(trainDir);
                         fs.mkdirSync(audioValidationDir);
                         fs.mkdirSync(audioTrainDir);
-                        //fs.mkdirSync(gmmDir);
                         fs.mkdirSync(audioValidationDir + "user/");
                         fs.mkdirSync(audioTrainDir + "user/");
                         fs.mkdirSync(audioValidationDir + "not/");
