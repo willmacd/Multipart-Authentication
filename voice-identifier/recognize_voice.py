@@ -1,17 +1,17 @@
 import subprocess
 import pyaudio
 import os
+import io
 import sys
+import cv2
 import json
-import pickle
-import warnings
+import base64
 import filetype
-from scipy.io.wavfile import read
+import numpy as np
+from PIL import Image
+import tensorflow as tf
 
 from data_processing import normalizeSoundRecognizing, eliminateAmbienceRecognizing, recognizeSpectrogram
-from feature_extraction import extract_features
-
-warnings.simplefilter("ignore")
 
 # HYPERPARAMETERS
 ROOT_DIR = os.path.dirname(os.path.dirname(__file__))
@@ -25,23 +25,24 @@ threshold = 0.20   # subject to change later in development
 
 # fetch data passed through PythonShell from app.js
 lines = sys.stdin.readline()
-data_passed = json.loads(lines)
-name = str(data_passed['name'])
+data = json.loads(lines)
+name = str(data['name'])
+model = str(data['model'])
 
 
 def recognize_voice(name):
-    # setting paths to database directory and .gmm files in models
-    test_file_dir = DATABASE_DIR + name + '/audioComparison/'
-    modelpath = DATABASE_DIR + str(name) + "/gmm-model/" + str(name) + ".gmm"
+    # setting paths to test file and specifying voice model
+    test_file = DATABASE_DIR + name + '/audioComparison/'
 
-    if os.path.exists(modelpath):
-        model = pickle.load(open(modelpath, 'rb'))
+    if data['model'] is not None:
+        model = tf.keras.models.load_model(str(data['model']))
     else:
-        print("There is no GMM in this specified path")
+        print("There is no model for this specified user")
         return
 
-    for path in os.listdir(test_file_dir):
-        path = os.path.join(test_file_dir, path)
+    # ensure that loginAttempt audio file is in '.wav' format (will work for multiple audio files as well)
+    for path in os.listdir(test_file):
+        path = os.path.join(test_file, path)
         fname = os.path.basename(path)
 
         # check that the audio files are saved under the correct extension
@@ -56,26 +57,51 @@ def recognize_voice(name):
     # data preprocessing
     normalizeSoundRecognizing(name)
     eliminateAmbienceRecognizing(name)
-    # recognizeSpectrogram(name)
+    recognizeSpectrogram(name)
 
-    # read the test files
-    sr, audio = read(test_file_dir + "loginAttempt.wav")
+    img64 = str.encode(data['image'])
 
-    # extract the mfcc features from the file
-    vector = extract_features(audio, sr)
+    decode = base64.b64decode(img64)
 
-    # get the likelihood score that 'loginAttempt.wav' matches the GMM (outputs a log() value of the score)
-    prob = model.predict_proba(vector)[:, 1].mean()
+    imgObj= Image.open(io.BytesIO(decode))
 
-    # if log_likelihood is greater than threshold grant access
-    if prob >= threshold:
+    img = cv2.cvtColor(np.array([imgObj]), cv2.COLOR_BGR2RGB)
+
+    resize = cv2.resize(img, (240, 240))
+    image = resize[np.newaxis, :, :, :]
+
+    prediction = model.predict(image, steps=1)
+    percentage = prediction[0][0] * 100
+
+    if percentage >= threshold:
         authentication = True
-        print("[VOICE MATCH] Voice matches the specified user ==> " + str(prob))
+        print("[VOICE MATCH] Voice detected is predicted to match " + data['name'] + "'s ==> " + str(percentage))
     else:
         authentication = False
-        print("[VOICE CONFLICT] Voice does not match the specified user ==> " + str(prob))
+        print("[Voice CONFLICT] Voice detected does not match " + data['name'] + "'s ==> " + str(percentage))
     return authentication
 
 
 if __name__ == '__main__':
     recognize_voice(name)
+
+
+'''
+# read the test files
+sr, audio = read(test_file + "loginAttempt.wav")
+
+# extract the mfcc features from the file
+vector = extract_features(audio, sr)
+
+# get the likelihood score that 'loginAttempt.wav' matches the GMM (outputs a log() value of the score)
+prob = model.predict_proba(vector)[:, 1].mean()
+
+# if log_likelihood is greater than threshold grant access
+if prob >= threshold:
+    authentication = True
+    print("[VOICE MATCH] Voice matches the specified user ==> " + str(prob))
+else:
+    authentication = False
+    print("[VOICE CONFLICT] Voice does not match the specified user ==> " + str(prob))
+return authentication
+'''
