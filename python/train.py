@@ -122,11 +122,15 @@ tuneHistory = model.fit_generator(train_generator,
 
 # save the model to the appropiate directory
 if data['model'] is None:
-    date = time.time()
-    print("saving new model to: ../models/" +
-          str(data['name']) + "/" + str(date) + '.h5')
-    os.makedirs("./models/" + str(data['name']) + "/")
-    model.save('./models/' + str(data['name']) + "/" + str(date) + '.h5')
+    if os.path.exists("./models/" + str(data['name']) + "/"):
+        date = time.time()
+        print("Saving new audio model to: ../models/" + str(data['name']) + "/" + "vision" + ".h5")    # str(date)
+        model.save("./models/" + str(data['name']) + "/" + "vision" + ".h5")    # str(date)
+    else:
+        os.makedirs("./models/" + str(data['name']) + "/")
+        date = time.time()
+        print("Saving new audio model to: ../models/" + str(data['name']) + "/" + "vision" + ".h5")     # str(date)
+        model.save("./models/" + str(data['name']) + "/" + "vision" + ".h5")    # str(date)
 else:
     model.save(data['model'])
 

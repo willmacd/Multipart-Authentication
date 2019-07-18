@@ -147,10 +147,10 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                         name: req.body.name,
                         trainDir: trainDir,
                         validationDir: validationDir,
-                        modelDir: "models/" + req.body.name + "/",
+                        modelDir: "./models/" + req.body.name + "/",
                         audioTrainDir: audioTrainDir,
                         audioValidationDir: audioValidationDir,
-                        audioModelDir: "models/" + req.body.name + "audio/",
+                        //audioModelDir: "models/" + req.body.name + "/audio/",
                         //gmmDir: gmmDir,
                         subscription: subscription,
                     };
@@ -173,12 +173,12 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                     }
 
                     for (let i = 0; i < req.body.audio.length; i++) {
-                        if (i > 3){
-                            fs.writeFileSync(audioValidationDir + "user/" + (i + 1).toString() + '.wav',
+                        if (i < 3){
+                            fs.writeFileSync(audioTrainDir + "user/" + i.toString() + '.wav',
                                 Buffer.from(req.body.audio[i].toString().replace('data:audio/wav;base64,', ''), 'base64'));
                         }
                         else {
-                            fs.writeFileSync(audioTrainDir + "user/" + (i + 1).toString() + '.wav',
+                            fs.writeFileSync(audioValidationDir + "user/" + i.toString() + '.wav',
                                 Buffer.from(req.body.audio[i].toString().replace('data:audio/wav;base64,', ''), 'base64'));
                         }
                     }
@@ -198,25 +198,6 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                         }
                     }
 
-                    ncp('./randomSpectrograms', audioTrainDir + "not/", (err) => {
-                        if (err) {
-                            res.send(err)
-                        }
-                        else{
-                            ncp('./randomSpectrograms', audioValidationDir + 'not/', (err) => {
-                                if (err) {
-                                    res.send(err)
-                                } else {
-                                    let audioShell = new PythonShell('./voice-identifier/trainAudio.py');
-                                    audioShell.send(JSON.stringify({name: req.body.name, trainingDir: audioTrainDir, validationDir: audioValidationDir, epochs: 10, model: null }));
-                                    audioShell.on('message', (message) => {
-                                        console.log(message);
-                                    });
-                                }
-                            })
-                        }
-                    });
-
                     // add none user images to training and validation
                     ncp("./randomImages", trainDir + "not/", (err) => {
                         if (err) {
@@ -233,7 +214,30 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                                     trainShell.send(JSON.stringify({ name: req.body.name, trainingDir: trainDir, validationDir: validationDir, epochs: 10, plot: false, model: null }));
                                     trainShell.on('message', (message) => {
                                         if (message === 'done') {
-                                            console.log("Training complete");
+                                            console.log("Vision Training Complete");
+                                        } else {
+                                            console.log(message)
+                                        }
+                                    });
+                                }
+                            })
+                        }
+                    });
+
+                    ncp('./randomSpectrograms', audioTrainDir + "not/", (err) => {
+                        if (err) {
+                            res.send(err)
+                        }
+                        else{
+                            ncp('./randomSpectrograms', audioValidationDir + 'not/', (err) => {
+                                if (err) {
+                                    res.send(err)
+                                } else {
+                                    let audioShell = new PythonShell('./voice-identifier/trainAudio.py');
+                                    audioShell.send(JSON.stringify({name: req.body.name, trainingDir: audioTrainDir, validationDir: audioValidationDir, epochs: 10, plot: false, model: null }));
+                                    audioShell.on('message', (message) => {
+                                        if (message === 'done') {
+                                            console.log("Audio Training Complete");
                                             db.collection('users').insertOne(data, (err, result) => {
                                                 if (err) return console.log(err);
                                                 console.log('saved to database');
@@ -243,8 +247,9 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                                                         console.error(error.stack);
                                                     });
                                                 }
-                                            })
-                                        } else {
+                                            });
+                                        }
+                                        else {
                                             console.log(message)
                                         }
                                     });

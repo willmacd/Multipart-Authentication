@@ -35,36 +35,44 @@ def trimWavFile(originPath, outputPath):
 
 # create a spectrogram for each of the training wav files for a specified user
 def trainingSpectrogram(username):
-    source = DATABASE_DIR + username + '/audio/'
+    train_source = DATABASE_DIR + username + '/audioTraining/user/'
+    validation_source = DATABASE_DIR + username + '/audioValidation/user/'
 
-    for i in range(len(os.listdir(source))):
-        # if file already exists, remove it from directory
-        if str(i) + ".png" in os.listdir(source):
-            os.unlink(source + str(i) + ".png")
+    source_list = [train_source, validation_source]
 
-    i = 0
-    wav_files = os.listdir(source)
-    for wav in wav_files:
-        i = i + 1
+    for source in source_list:
+        for i in range(len(os.listdir(source))):
+            # if file already exists, remove it from directory
+            if str(i) + ".png" in os.listdir(source):
+                os.unlink(source + username + str(i) + ".png")
 
-        # reading audio files of speaker
-        sr, audio = read(source + wav)
-        freq, times, spectrogram = signal.spectrogram(audio, sr)
-        plt.pcolormesh(times, freq, spectrogram)
-        fig = plt.imshow(spectrogram, aspect='auto', origin='lower',
-                         extent=[times.min(), times.max(), freq.min(), freq.max()])
-        fig.axes.get_xaxis().set_visible(False)
-        fig.axes.get_yaxis().set_visible(False)
-        plt.savefig(str(i) + '.png', bbox_inches='tight', dpi=300, transparent=True, pad_inches=0.0)
-        os.rename(str(i) + '.png', source + str(i) + '.png')
-        os.unlink(source + wav)
+        if source is train_source:
+            i = 0
+        else:
+            i = 3
 
-        # fig.axes.get_xaxis().set_visible(True)
-        # fig.axes.get_yaxis().set_visible(True)
-        # plt.title("Spectrogram of " + username + wav)
-        # plt.xlabel('Time [sec]')
-        # plt.ylabel('Frequency [Hz]')
-        # plt.show()
+        wav_files = os.listdir(source)
+        for wav in wav_files:
+            # reading audio files of speaker
+            sr, audio = read(source + wav)
+            freq, times, spectrogram = signal.spectrogram(audio, sr)
+            plt.pcolormesh(times, freq, spectrogram)
+            fig = plt.imshow(spectrogram, aspect='auto', origin='lower',
+                             extent=[times.min(), times.max(), freq.min(), freq.max()])
+            fig.axes.get_xaxis().set_visible(False)
+            fig.axes.get_yaxis().set_visible(False)
+            plt.savefig(username + str(i) + '.png', bbox_inches='tight', dpi=300, transparent=True, pad_inches=0.0)
+            os.rename(username + str(i) + '.png', source + username + str(i) + '.png')
+            os.unlink(source + wav)
+
+            # fig.axes.get_xaxis().set_visible(True)
+            # fig.axes.get_yaxis().set_visible(True)
+            # plt.title("Spectrogram of " + username + wav)
+            # plt.xlabel('Time [sec]')
+            # plt.ylabel('Frequency [Hz]')
+            # plt.show()
+
+            i = i + 1
 
 
 # create a spectrogram for each the login attempt wav file
@@ -83,7 +91,7 @@ def recognizeSpectrogram(username):
     fig.axes.get_yaxis().set_visible(False)
     plt.savefig('loginAttempt.png', bbox_inches='tight', dpi=300, transparent=True, pad_inches=0.0)
     os.rename('loginAttempt.png', source + 'loginAttempt.png')
-    source.unlink(source + 'loginAttempt.wav')
+    os.unlink(source + 'loginAttempt.wav')
 
     # fig.axes.get_xaxis().set_visible(True)
     # fig.axes.get_yaxis().set_visible(True)
@@ -95,15 +103,20 @@ def recognizeSpectrogram(username):
 
 # Normalize the sound of all audio files for training data
 def normalizeSoundTraining(username):
-    i = 0
-    avg_amplitude = -20.0  # measured in dBFS (decibels relative to full scale)
-    wav_files = os.listdir(DATABASE_DIR + username + '/audio/')
-    for wav in wav_files:
-        i = i + 1
-        audio = AS.from_file(DATABASE_DIR + username + '/audio/' + wav, "wav")
-        change_in_dBFS = avg_amplitude - audio.dBFS
-        normalized_audio = audio.apply_gain(change_in_dBFS)
-        normalized_audio.export(DATABASE_DIR + username + '/audio/' + str(i) + '.wav', format='wav')
+    train_source = DATABASE_DIR + username + '/audioTraining/user/'
+    validation_source = DATABASE_DIR + username + '/audioValidation/user/'
+    source_list = [train_source, validation_source]
+
+    for source in source_list:
+        avg_amplitude = -20.0  # measured in dBFS (decibels relative to full scale)
+        wav_files = os.listdir(source)
+        for wav in wav_files:
+            audio = AS.from_file(source + wav, "wav")
+            change_in_dBFS = avg_amplitude - audio.dBFS
+            normalized_audio = audio.apply_gain(change_in_dBFS)
+            normalized_audio.export(source + wav, format='wav')
+            # os.unlink(source + str(i) + '.wav')
+
 
 
 # Normalize the sound of the audio file created in attempts to login
@@ -117,19 +130,24 @@ def normalizeSoundRecognizing(username):
 
 # eliminating the ambient noise in the training audio files
 def eliminateAmbienceTraining(username):
+    train_source = DATABASE_DIR + username + '/audioTraining/user/'
+    validation_source = DATABASE_DIR + username + '/audioValidation/user/'
+    source_list = [train_source, validation_source]
+
     i = 0
     recognizer = sr.Recognizer()
-    wav_files = os.listdir(DATABASE_DIR + username + '/audio/')
-    for wav in wav_files:
-        i = i + 1
-        audio_file = sr.AudioFile(DATABASE_DIR + username + '/audio/' + wav)
-        with audio_file as source:
-            recognizer.adjust_for_ambient_noise(source, duration=0.5)
-            adjusted_audio = recognizer.record(source)
+    for source in source_list:
+        wav_files = os.listdir(source)
+        for wav in wav_files:
+            i = i + 1
+            audio_file = sr.AudioFile(source + wav)
+            with audio_file as sound:
+                recognizer.adjust_for_ambient_noise(sound, duration=0.5)
+                adjusted_audio = recognizer.record(sound)
 
-            # write adjusted audio to a WAV file
-            with open(DATABASE_DIR + username + '/audio/' + wav, "wb") as file:
-                file.write(adjusted_audio.get_wav_data())
+                # write adjusted audio to a WAV file
+                with open(source + wav, "wb") as file:
+                    file.write(adjusted_audio.get_wav_data())
 
 
 # eliminating the ambient noise in the recognition audio file
