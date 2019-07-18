@@ -1,6 +1,5 @@
 # importing necessary packages
 import os
-import sys
 import wave
 import numpy as np
 from matplotlib import pyplot as plt
@@ -13,7 +12,6 @@ DATABASE_DIR = ROOT_DIR + 'users/'
 
 
 def visualize_audio(username):
-
     for i in os.listdir(DATABASE_DIR + username + '/audio/'):
         wav_file = wave.open(DATABASE_DIR + username + '/audio/' + str(i), 'r')
 

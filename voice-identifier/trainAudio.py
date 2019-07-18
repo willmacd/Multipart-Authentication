@@ -1,18 +1,13 @@
 import pyaudio
 import os
 import time
-import pickle
-import numpy as np
 import filetype
 import subprocess
 import sys
 import json
 import tensorflow as tf
-from scipy.io.wavfile import read
-from sklearn.mixture import GaussianMixture as GMM
 
 from data_processing import normalizeSoundTraining, eliminateAmbienceTraining, trainingSpectrogram
-from feature_extraction import extract_features
 
 # HYPERPARAMETERS
 ROOT_DIR = os.path.dirname(os.path.dirname(__file__))
@@ -68,7 +63,6 @@ def trainAudio(name):
                 subprocess.call(command, shell=True)
                 os.remove(path)
                 os.rename('./' + fname, path)
-
 
     # process data in the training files directory
     normalizeSoundTraining(name)

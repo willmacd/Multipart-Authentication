@@ -64,15 +64,13 @@ def trainingSpectrogram(username):
             plt.savefig(username + str(i) + '.png', bbox_inches='tight', dpi=300, transparent=True, pad_inches=0.0)
             os.rename(username + str(i) + '.png', source + username + str(i) + '.png')
             os.unlink(source + wav)
-
+            i = i + 1
             # fig.axes.get_xaxis().set_visible(True)
             # fig.axes.get_yaxis().set_visible(True)
             # plt.title("Spectrogram of " + username + wav)
             # plt.xlabel('Time [sec]')
             # plt.ylabel('Frequency [Hz]')
             # plt.show()
-
-            i = i + 1
 
 
 # create a spectrogram for each the login attempt wav file
@@ -115,8 +113,6 @@ def normalizeSoundTraining(username):
             change_in_dBFS = avg_amplitude - audio.dBFS
             normalized_audio = audio.apply_gain(change_in_dBFS)
             normalized_audio.export(source + wav, format='wav')
-            # os.unlink(source + str(i) + '.wav')
-
 
 
 # Normalize the sound of the audio file created in attempts to login

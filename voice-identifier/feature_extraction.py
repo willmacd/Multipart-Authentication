@@ -41,7 +41,7 @@ def extract_features(audio, rate):
 
 
 def strip_init_err(s, freq):
-    ''' Strip initial recording error - 1.2s '''
+    # Strip initial recording error - 1.2s
     return s[int(freq*1.2):]
 
 
