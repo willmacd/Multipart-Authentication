@@ -38,12 +38,19 @@ def recognize_voice(name):
 
     # encode the image data passed through python shell
     img64 = str.encode(data['image'])
+
+    # if img64 missing padding, add padding to base64 file
+    missing_padding = len(data) % 4
+    if missing_padding:
+        img64 += b'='* (4 - missing_padding)
+
     # decode the image data with base 64 encoding
     decode = base64.b64decode(img64)
+
     # create an image object of the decoded image data using PIL
     imgObj= Image.open(io.BytesIO(decode))
+    img = cv2.cvtColor(np.array(imgObj), cv2.COLOR_BGR2RGB)
 
-    img = cv2.cvtColor(np.array([imgObj]), cv2.COLOR_BGR2RGB)
     # resize imput data and image data array to fit the output of MobileNetV2
     resize = cv2.resize(img, (240, 240))
     image = resize[np.newaxis, :, :, :]
@@ -67,6 +74,13 @@ if __name__ == '__main__':
 
 
 '''
+    # ensure that loginAttempt audio file is in '.wav' format (will work for multiple audio files as well)
+    for path in os.listdir(test_file):
+        path = os.path.join(test_file, path)
+        fname = os.path.basename(path)
+
+
+
 # read the test files
 sr, audio = read(test_file + "loginAttempt.wav")
 

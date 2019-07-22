@@ -318,7 +318,7 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                     }
                 }
                 if (exception === false) {
-                    let model = req.body.model + "/" + fs.readdirSync(req.body.model);
+                    let model = req.body.model + '/vision.h5';
                     let img = fs.readFileSync("./users/" + req.body.name + "/faceComparison/loginAttempt.png");
                     let faceShell = new PythonShell('./python/predict.py');
                     faceShell.send(JSON.stringify({name: req.body.name,
@@ -363,8 +363,11 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                     }
                 }
                 if (exception === false) {
+                    let model = req.body.model + '/voice.h5';
+                    let img = fs.readFileSync("./users/" + req.body.name + "/audioComparison/loginAttempt.png");
                     let voiceShell = new PythonShell('./voice-identifier/recognize_voice.py');
-                    voiceShell.send(JSON.stringify( {name: req.body.name}));
+                    voiceShell.send(JSON.stringify( {name: req.body.name,
+                        image: Buffer.from(img).toString('base64'), model: model}));
                     voiceShell.on('message', (message) => {
                         console.log(message);
                         res.send(message);
