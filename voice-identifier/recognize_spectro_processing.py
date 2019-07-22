@@ -9,11 +9,11 @@ from data_processing import normalizeSoundRecognizing, eliminateAmbienceRecogniz
 
 # specify important paths
 ROOT_DIR = os.path.dirname(os.path.dirname(__file__))
-DATABASE_DIR = ROOT_DIR + '/users/'
+DATABASE_DIR = './users/'
 
 # fetch data passed through python shell
 lines = sys.stdin.readline()
-data = json.load(lines)
+data = json.loads(lines)
 name = str(data['name'])
 
 
@@ -34,6 +34,8 @@ def process_spectro(username):
     normalizeSoundRecognizing(username)
     eliminateAmbienceRecognizing(username)
     recognizeSpectrogram(username)
+
+    print("done")
 
 
 if __name__ == "__main__":

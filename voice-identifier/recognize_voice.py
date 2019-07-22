@@ -9,8 +9,6 @@ import numpy as np
 from PIL import Image
 import tensorflow as tf
 
-from recognize_spectro_processing import process_spectro
-
 # HYPERPARAMETERS
 ROOT_DIR = os.path.dirname(os.path.dirname(__file__))
 DATABASE_DIR = ROOT_DIR + '/users/'
@@ -19,7 +17,7 @@ CHANNELS = 2
 RATE = 44100
 CHUNK = 1024
 RECORD_SECONDS = 3.5
-threshold = 0.20   # subject to change later in development
+threshold = 60   # subject to change later in development
 
 # fetch data passed through PythonShell from app.js
 lines = sys.stdin.readline()
@@ -71,31 +69,3 @@ def recognize_voice(name):
 
 if __name__ == '__main__':
     recognize_voice(name)
-
-
-'''
-    # ensure that loginAttempt audio file is in '.wav' format (will work for multiple audio files as well)
-    for path in os.listdir(test_file):
-        path = os.path.join(test_file, path)
-        fname = os.path.basename(path)
-
-
-
-# read the test files
-sr, audio = read(test_file + "loginAttempt.wav")
-
-# extract the mfcc features from the file
-vector = extract_features(audio, sr)
-
-# get the likelihood score that 'loginAttempt.wav' matches the GMM (outputs a log() value of the score)
-prob = model.predict_proba(vector)[:, 1].mean()
-
-# if log_likelihood is greater than threshold grant access
-if prob >= threshold:
-    authentication = True
-    print("[VOICE MATCH] Voice matches the specified user ==> " + str(prob))
-else:
-    authentication = False
-    print("[VOICE CONFLICT] Voice does not match the specified user ==> " + str(prob))
-return authentication
-'''
