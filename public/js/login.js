@@ -222,7 +222,7 @@ function startup() {
                 data: {
                     name: $("#name").val(),
                     image: face,
-                    model: './models/' + $("#name").val() + '/vision.h5',
+                    model: './models/' + $("#name").val(),
                 },
                 success: function (response) {
                     console.log(response);
@@ -230,19 +230,6 @@ function startup() {
                         faceMatch = true;
                     } else {
                         faceMatch = false;
-                    }
-                    // since face comparison takes longer than voice, check matches upon completion of face recognition
-                    if(faceMatch === true && voiceMatch === true) {
-                        window.alert("[ACCESS GRANTED] Both face and voice of login request match");
-
-                        // use window.localStorage to pass the username through to access granted page
-                        window.localStorage.setItem("username", $("#name").val());
-
-                        location.assign("/accessGranted.html");
-                    }
-                    else {
-                        window.alert("[ACCESS DENIED] Did not have a match for both face and voice");
-                        location.assign("/");
                     }
                 },
                 error: function (exception) {
@@ -266,7 +253,7 @@ function startup() {
                 data: {
                     name: $("#name").val(),
                     audio: voice,
-                    model: './models/' + $("#name").val() + '/voice.h5'
+                    model: './models/' + $("#name").val(),
                 },
                 success: function (response) {
                     console.log(response);
@@ -274,6 +261,19 @@ function startup() {
                         voiceMatch = true;
                     } else {
                         voiceMatch = false;
+                    }
+                    // since face comparison takes longer than voice, check matches upon completion of face recognition
+                    if(faceMatch === true && voiceMatch === true) {
+                        window.alert("[ACCESS GRANTED] Both face and voice of login request match");
+
+                        // use window.localStorage to pass the username through to access granted page
+                        window.localStorage.setItem("username", $("#name").val());
+
+                        location.assign("/accessGranted.html");
+                    }
+                    else {
+                        window.alert("[ACCESS DENIED] Did not have a match for both face and voice");
+                        location.assign("/");
                     }
                 },
                 error: function (exception) {
