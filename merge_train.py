@@ -11,7 +11,7 @@ import tensorflow as tf
 from keras import Sequential, Model
 from keras.layers import concatenate, Activation, Dense
 
-from data_processing import normalizeSoundTraining, eliminateAmbienceTraining, trainingSpectrogram
+from voice_identifier.data_processing import normalizeSoundTraining, eliminateAmbienceTraining, trainingSpectrogram
 
 # HYPERPARAMETERS
 ROOT_DIR = os.path.dirname(os.path.dirname(__file__))
@@ -45,7 +45,7 @@ def train():
             command = "ffmpeg -i " + path + " -ab 160k -ac 2 -ar 44100 -vn " + fname
             subprocess.call(command, shell=True)
             os.remove(path)
-            os.rename('./' + fname, path)
+            os.rename('/' + fname, path)
 
     for path in os.listdir(audioValidationDir + 'user/'):
         path = os.path.join(audioValidationDir + 'user/', path)

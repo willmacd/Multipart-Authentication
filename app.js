@@ -191,7 +191,7 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                             ncp("./randomImages", validationDir + "not/", (err) => {
                                 if (err) {
                                     res.send(err)
-                                } else {
+                                } /*else {
                                     console.log("Beginning training");
                                     res.redirect("/");
                                     // begin training face identification model
@@ -204,7 +204,7 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                                             console.log(message)
                                         }
                                     });
-                                }
+                                }*/
                             })
                         }
                     });
@@ -218,7 +218,7 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                                 if (err) {
                                     res.send(err)
                                 } else {
-                                    let audioShell = new PythonShell('./voice-identifier/trainAudio.py');
+                                    /*let audioShell = new PythonShell('./voice-identifier/trainAudio.py');
                                     audioShell.send(JSON.stringify({name: req.body.name, trainingDir: audioTrainDir, validationDir: audioValidationDir, epochs: 10, plot: false, model: null }));
                                     audioShell.on('message', (message) => {
                                         if (message === 'done') {
@@ -230,6 +230,29 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                                                     console.log("Sending Notification");
                                                     webPush.sendNotification(subscription, payload).catch(error => {
                                                         console.error(error.stack);
+                                                    });
+                                                }
+                                            });
+                                        }
+                                        else {
+                                            console.log(message)
+                                        }
+                                    });*/
+                                    console.log("Beginning training");
+                                    res.redirect("/");
+                                    let trainShell = new PythonShell ('./merge_train.py');
+                                    trainShell.send(JSON.stringify({name: req.body.name, audioTrainDir: audioTrainDir, audioValidationDir: audioValidationDir,
+                                        imageTrainDir: trainDir, imageValidationDir: validationDir, img_model: null, audio_model: null}));
+                                    trainShell.on('message', (message) => {
+                                        if(message === 'done') {
+                                            console.log("Training is Complete");
+                                            db.collection('users').insertOne(data, (err, result) => {
+                                                if (err) return console.log(err);
+                                                console.log("Model saved to database");
+                                                if (subscription !== false) {
+                                                    console.log("Sending Notification");
+                                                    webPush.sendNotification(subscription, payload).catch(error => {
+                                                        console.log(error.stack);
                                                     });
                                                 }
                                             });
