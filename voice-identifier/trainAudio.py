@@ -12,11 +12,6 @@ from data_processing import normalizeSoundTraining, eliminateAmbienceTraining, t
 # HYPERPARAMETERS
 ROOT_DIR = os.path.dirname(os.path.dirname(__file__))
 DATABASE_DIR = ROOT_DIR + '/users/'
-FORMAT = pyaudio.paInt16
-CHANNELS = 2
-RATE = 44100
-CHUNK = 1024
-RECORD_SECONDS = 3.5
 
 spect_size = 240
 batch_size = 4
@@ -93,7 +88,7 @@ def trainAudio(name):
 
     # check that a model does not yet exist
     if data['model'] is None:
-        # specifying the shape of the input spectrograms
+        # specifying the shape of the input spectrogram
         SPECT_SHAPE = (spect_size, spect_size, 3)
 
         # creating a base model from pre-trained MobileNetV2 network
