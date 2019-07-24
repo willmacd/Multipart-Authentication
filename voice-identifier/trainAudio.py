@@ -158,18 +158,20 @@ def trainAudio(name):
 
     print("Finished training, saving model...")
 
-    if data['model'] is None:
-        if os.path.exists("./models/" + str(data['name']) + "/"):
-            date = time.time()
-            print("Saving new audio model to: ../models/" + str(data['name']) + "/" + "voice" + ".h5")     # str(date)
-            model.save("./models/" + str(data['name']) + "/" + "voice" + ".h5")    # str(date)
+        if data['model'] is None:
+            if os.path.exists("./models/" + str(data['name']) + "/"):
+                date = time.time()
+                print("Saving new audio model to: ../models/" + str(data['name']) + "/" + "voice" + ".h5")
+                model.save("./models/" + str(data['name']) + "/" + "voice" + ".h5")    # str(date)
+            else:
+                os.makedirs("./models/" + str(data['name']) + "/")
+                date = time.time()
+                print("Saving new audio model to: ../models/" + str(data['name']) + "/" + "voice" + ".h5")
+                model.save("./models/" + str(data['name']) + "/" + "voice" + ".h5")    # str(date)
         else:
-            os.makedirs("./models/" + str(data['name']) + "/")
-            date = time.time()
-            print("Saving new audio model to: ../models/" + str(data['name']) + "/" + "voice" + ".h5")     # str(date)
-            model.save("./models/" + str(data['name']) + "/" + "voice" + ".h5")    # str(date)
-    else:
-        model.save(data['model'])
+            model.save(data['model'])
+
+        model.summary()
 
     print("done")
 

@@ -134,6 +134,8 @@ if data['model'] is None:
 else:
     model.save(data['model'])
 
+model.summary()
+
 
 ############
 # Plotting #

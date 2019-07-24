@@ -353,7 +353,10 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                             image: Buffer.from(img).toString('base64'), model: model}));
                         voiceShell.on('message', (message) => {
                             console.log(message);
-                            res.send(message);
+                            res.write(message + '\n');
+                            if(message.startsWith("[VOICE")) {
+                                res.end();
+                            }
                         });
                     })
                 }
@@ -399,7 +402,10 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                         image: Buffer.from(img).toString('base64'), model: model}));
                     faceShell.on('message', (message) => {
                         console.log(message);
-                        res.send(message)
+                        res.write(message + '\n');
+                        if(message.startsWith("[FACE")) {
+                            res.end();
+                        }
                     });
                     faceShell.end(function(err) {
                         if (err) throw err;
