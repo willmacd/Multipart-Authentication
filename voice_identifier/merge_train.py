@@ -4,6 +4,7 @@ import filetype
 import subprocess
 import sys
 import json
+import numpy as np
 
 import tensorflow as tf
 from tensorflow.keras import Sequential, Model
@@ -28,8 +29,8 @@ audioTrainingDir = str(data['audioTrainDir'])
 audioValidationDir = str(data['audioValidationDir'])
 imageTrainingDir = str(data['imageTrainDir'])
 imageValidationDir = str(data['imageValidationDir'])
-concatTrainDir = str(data['concatTrainDir'])
-concatValidationDir = str(data['concatValidationDir'])
+# concatTrainDir = str(data['concatTrainDir'])
+# concatValidationDir = str(data['concatValidationDir'])
 
 
 def train():
@@ -97,17 +98,17 @@ def train():
         batch_size=img_batch_size,
         class_mode='binary')
 
-    concatTrain_generator = train_datagen.flow_from_directory(
-        concatTrainDir,
-        target_size=(image_size, image_size),
-        batch_size=img_batch_size,
-        class_mode='binary')
+    # concatTrain_generator = train_datagen.flow_from_directory(
+    #     concatTrainDir,
+    #     target_size=(image_size, image_size),
+    #     batch_size=img_batch_size,
+    #     class_mode='binary')
 
-    concatValidation_generator = validation_datagen.flow_from_directory(
-        concatValidationDir,
-        target_size=(image_size, image_size),
-        batch_size=img_batch_size,
-        class_mode='binary')
+    # concatValidation_generator = validation_datagen.flow_from_directory(
+    #     concatValidationDir,
+    #     target_size=(image_size, image_size),
+    #     batch_size=img_batch_size,
+    #     class_mode='binary')
 
     ##################
     # Model Building #
@@ -170,6 +171,8 @@ def train():
     img_validation_steps = imgValidation_generator.n
     audio_steps_per_epoch = audioTrain_generator.n
     audio_validation_steps = audioValidation_generator.n
+    # concat_steps_per_epoch = concatTrain_generator.n
+    # concat_validation_steps = concatValidation_generator.n
 
     img_history = img_model.fit_generator(imgTrain_generator,
                                           steps_per_epoch=img_steps_per_epoch,
@@ -190,25 +193,27 @@ def train():
     # Concatenate models #
     ######################
 
+    # todo check that the concatenated model works, if not attempt another way to train
+
     # concatenate audio_model and img_model to create a multimodal network with spectrogram and face images as inputs
     merged_output = Concatenate(axis=-1)([img_model.output, audio_model.output])
     out = Dense(128, activation='sigmoid')(merged_output)
     out = Dropout(0.8)(out)
     out = Dense(32, activation='sigmoid')(out)
-    out1 = Dense(2, activation='sigmoid')(out)
+    out1 = Dense(1, activation='sigmoid')(out)
 
     concat_model = Model([img_model.input, audio_model.input], out)
 
-    concat_model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=2e-5),
+    concat_model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=0.0001),
                          loss='binary_crossentropy',
                          metrics=['accuracy'])
 
-    concat_model.fit_generator(concatTrain_generator,
-                               steps_per_epoch=concatTrain_generator.n,
-                               epochs=10,
-                               workers=4,
-                               validation_data=concatValidation_generator,
-                               validation_steps=concatValidation_generator.n)
+    # concat_history = concat_model.fit_generator(concatTrain_generator,
+    #                                             steps_per_epoch=concat_steps_per_epoch,
+    #                                             epochs=10,
+    #                                             workers=4,
+    #                                             validation_data=concatValidation_generator,
+    #                                             validation_steps=range(concat_validation_steps))
 
     print("Finished training, saving model...")
 
@@ -216,15 +221,15 @@ def train():
         if os.path.exists("./models/" + str(data['name']) + "/"):
             date = time.time()
             print("Saving new model to: ../models/" + str(data['name']) + "/" + str(date) + ".h5")
-            combined_model.save("./models/" + str(data['name']) + "/" + str(date) + ".h5")
+            concat_model.save("./models/" + str(data['name']) + "/" + str(date) + ".h5")
         else:
             os.makedirs("./models/" + str(data['name']) + "/")
             date = time.time()
             print("Saving new model to: ../models/" + str(data['name']) + "/" + str(date) + ".h5")
-            combined_model.save("./models/" + str(data['name']) + "/" + str(date) + ".h5")
+            concat_model.save("./models/" + str(data['name']) + "/" + str(date) + ".h5")
     else:
-        combined_model.save(data['img_model'])
-        combined_model.save(data['audio_model'])
+        concat_model.save(data['img_model'])
+        concat_model.save(data['audio_model'])
 
     print("done")
 
