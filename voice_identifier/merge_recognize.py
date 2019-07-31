@@ -8,9 +8,7 @@ import numpy as np
 from PIL import Image
 import tensorflow as tf
 
-# HYPERPARAMETERS
-ROOT_DIR = os.path.dirname(os.path.dirname(__file__))
-DATABASE_DIR = ROOT_DIR + '/users/'
+# set threshold for authentication
 threshold = 60   # subject to change later in development
 
 # fetch data passed through PythonShell from app.js

@@ -340,65 +340,63 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                     exception = true;
                 }
                 else {
-                    let parentDir = './users/' + req.body.name + '/';
-                    let file = fs.readdirSync(parentDir);
+                    let file = fs.readdirSync(req.body.model);
                     if (file.length > 1) {
                         res.status(409).send("Conflicting models, unexpected number of models were found within parent directory");
                         exception = true;
                     }
-                    else {
-                        if(!fs.existsSync(parentDir + "faceComparison/")) {
-                            fs.mkdirSync(parentDir + "faceComparison/");
-                            console.log("'faceComparison' directory successfully created");
-                            writeFaceComparisonFile(req);
-                            console.log("'loginAttempt.png' has been successfully uploaded to the database")
-                        }
-                        else if(fs.existsSync(parentDir + 'faceComparison/') && !fs.existsSync(parentDir + 'faceComparison/loginAttempt.png')) {
-                            console.log("'faceComparison' directory already exists");
-                            writeFaceComparisonFile(req);
-                            console.log("'loginAttempt.png' has been successfully added to the database");
-                        }
-                        else if(fs.existsSync(parentDir + 'faceComparison/loginAttempt.png')) {
-                            console.log("'loginAttempt.png' already exists");
-                            fs.unlinkSync(parentDir + 'faceComparison/loginAttempt.png');
-                            console.log("Existing 'loginAttempt.png' has successfully been removed from the directory");
-                            writeFaceComparisonFile(req);
-                            console.log("New 'loginAttempt.png' has been successfully added to the database")
-                        }
-                        if(!fs.existsSync(parentDir + 'audioComparison/')){
-                            fs.mkdirSync(parentDir + 'audioComparison/');
-                            console.log("'audioComparison' directory successfully created");
-                            fs.writeFileSync(parentDir + 'audioComparison/loginAttempt.wav', Buffer.from(req.body.audio.toString().replace('data:audio/wav;base64,', ''), 'base64'));
-                            console.log("'loginAttempt.wav' has been successfully uploaded to the database");
-                        }
-                        else if(fs.existsSync(parentDir + 'audioComparison/') && !fs.existsSync(parentDir + 'audioComparison/loginAttempt.wav') && !fs.existsSync(parentDir + 'audioComparison/loginAttempt.png')) {
-                            fs.writeFileSync(parentDir + 'audioComparison/loginAttempt.wav', Buffer.from(req.body.audio.toString().replace('data:audio/wav;base64,', ''), 'base64'));
-                            console.log("'audioComparison' directory already exists");
-                            console.log("'loginAttempt.wav' has successfully been uploaded to the database");
-                        }
-                        else if(fs.existsSync(parentDir + 'audioComparison/loginAttempt.wav') && !fs.existsSync(parentDir + 'audioComparison/loginAttempt.png')) {
-                            console.log("'audioComparison' directory already exists");
-                            console.log("'loginAttempt.wav' already exists");
-                            fs.unlinkSync(parentDir + 'audioComparison/loginAttempt.wav');
-                            console.log("Existing 'loginAttempt.wav' has successfully been removed from directory");
-                            fs.writeFileSync(parentDir + 'audioComparison/loginAttempt.wav', Buffer.from(req.body.audio.toString().replace('data:audio/wav;base64,', ''), 'base64'));
-                            console.log("New 'loginAttempt.wav' has been successfully uploaded to the database");
-                        }
-                        else if(!fs.existsSync(parentDir + 'audioComparison/loginAttempt.wav') && fs.existsSync(parentDir + 'audioComparison/loginAttempt.png')) {
-                            console.log("'audioComparison' directory already exists");
-                            console.log("'loginAttempt.png' already exists");
-                            fs.unlinkSync(parentDir + 'audioComparison/loginAttempt.png');
-                            console.log("Existing 'loginAttempt.png' has successfully been removed from directory");
-                            fs.writeFileSync(parentDir + 'audioComparison/loginAttempt.wav', Buffer.from(req.body.audio.toString().replace('data:audio/wav;base64,', ''), 'base64'));
-                            console.log("New 'loginAttempt.wav' has been successfully uploaded to the database");
-                        }
-                        else if(fs.existsSync(parentDir + 'audioComparison/loginAttempt.wav') && fs.existsSync(parentDir + 'audioComparison/loginAttempt.png')) {
-                            console.log("'audioComparison' directory already exists");
-                            console.log("'loginAttempt.wav' already exists");
-                            console.log("'loginAttempt.png' already exists");
-                            fs.unlinkSync(parentDir + 'audioComparison/loginAttempt.png');
-                            console.log("Existing 'loginAttempt.png' was successfully removed from directory");
-                        }
+                    let parentDir = './users/' + req.body.name + '/';
+                    if(!fs.existsSync(parentDir + "faceComparison/")) {
+                        fs.mkdirSync(parentDir + "faceComparison/");
+                        console.log("'faceComparison' directory successfully created");
+                        writeFaceComparisonFile(req);
+                        console.log("'loginAttempt.png' has been successfully uploaded to the database")
+                    }
+                    else if(fs.existsSync(parentDir + 'faceComparison/') && !fs.existsSync(parentDir + 'faceComparison/loginAttempt.png')) {
+                        console.log("'faceComparison' directory already exists");
+                        writeFaceComparisonFile(req);
+                        console.log("'loginAttempt.png' has been successfully added to the database");
+                    }
+                    else if(fs.existsSync(parentDir + 'faceComparison/loginAttempt.png')) {
+                        console.log("'loginAttempt.png' already exists");
+                        fs.unlinkSync(parentDir + 'faceComparison/loginAttempt.png');
+                        console.log("Existing 'loginAttempt.png' has successfully been removed from the directory");
+                        writeFaceComparisonFile(req);
+                        console.log("New 'loginAttempt.png' has been successfully added to the database")
+                    }
+                    if(!fs.existsSync(parentDir + 'audioComparison/')){
+                        fs.mkdirSync(parentDir + 'audioComparison/');
+                        console.log("'audioComparison' directory successfully created");
+                        fs.writeFileSync(parentDir + 'audioComparison/loginAttempt.wav', Buffer.from(req.body.audio.toString().replace('data:audio/wav;base64,', ''), 'base64'));
+                        console.log("'loginAttempt.wav' has been successfully uploaded to the database");
+                    }
+                    else if(fs.existsSync(parentDir + 'audioComparison/') && !fs.existsSync(parentDir + 'audioComparison/loginAttempt.wav') && !fs.existsSync(parentDir + 'audioComparison/loginAttempt.png')) {
+                        fs.writeFileSync(parentDir + 'audioComparison/loginAttempt.wav', Buffer.from(req.body.audio.toString().replace('data:audio/wav;base64,', ''), 'base64'));
+                        console.log("'audioComparison' directory already exists");
+                        console.log("'loginAttempt.wav' has successfully been uploaded to the database");
+                    }
+                    else if(fs.existsSync(parentDir + 'audioComparison/loginAttempt.wav') && !fs.existsSync(parentDir + 'audioComparison/loginAttempt.png')) {
+                        console.log("'audioComparison' directory already exists");
+                        console.log("'loginAttempt.wav' already exists");
+                        fs.unlinkSync(parentDir + 'audioComparison/loginAttempt.wav');
+                        console.log("Existing 'loginAttempt.wav' has successfully been removed from directory");
+                        fs.writeFileSync(parentDir + 'audioComparison/loginAttempt.wav', Buffer.from(req.body.audio.toString().replace('data:audio/wav;base64,', ''), 'base64'));
+                        console.log("New 'loginAttempt.wav' has been successfully uploaded to the database");
+                    }
+                    else if(!fs.existsSync(parentDir + 'audioComparison/loginAttempt.wav') && fs.existsSync(parentDir + 'audioComparison/loginAttempt.png')) {
+                        console.log("'audioComparison' directory already exists");
+                        console.log("'loginAttempt.png' already exists");
+                        fs.unlinkSync(parentDir + 'audioComparison/loginAttempt.png');
+                        console.log("Existing 'loginAttempt.png' has successfully been removed from directory");
+                        fs.writeFileSync(parentDir + 'audioComparison/loginAttempt.wav', Buffer.from(req.body.audio.toString().replace('data:audio/wav;base64,', ''), 'base64'));
+                        console.log("New 'loginAttempt.wav' has been successfully uploaded to the database");
+                    }
+                    else if(fs.existsSync(parentDir + 'audioComparison/loginAttempt.wav') && fs.existsSync(parentDir + 'audioComparison/loginAttempt.png')) {
+                        console.log("'audioComparison' directory already exists");
+                        console.log("'loginAttempt.wav' already exists");
+                        console.log("'loginAttempt.png' already exists");
+                        fs.unlinkSync(parentDir + 'audioComparison/loginAttempt.png');
+                        console.log("Existing 'loginAttempt.png' was successfully removed from directory");
                     }
                     if (exception === false) {
                         let spectroShell = new PythonShell('./voice_identifier/recognize_spectro_processing.py');
@@ -413,7 +411,7 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                         });
                         spectroShell.end(function(err) {
                             if (err) throw err;
-                            let model = req.body.model + file;
+                            let model = req.body.model + '/' + file;
                             let spectro = fs.readFileSync("./users/" + req.body.name + "/audioComparison/loginAttempt.png");
                             let img = fs.readFileSync("./users/" + req.body.name + "/faceComparison/loginAttempt.png");
                             let recognizeShell = new PythonShell('./voice_identifier/merge_recognize.py');
