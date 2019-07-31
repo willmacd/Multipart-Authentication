@@ -4,7 +4,6 @@ import filetype
 import subprocess
 import sys
 import json
-import numpy as np
 
 import tensorflow as tf
 from tensorflow.keras import Sequential, Model

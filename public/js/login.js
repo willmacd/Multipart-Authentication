@@ -215,8 +215,45 @@ function startup() {
         if(!errors) {
             loginBtn.attr("disabled", true);
 
-            // send post request to app.js through jQuery
             $.ajax({
+                url: '/api/login',
+                type: 'post',
+                data: {
+                    name: $("#name").val(),
+                    image: face,
+                    audio: voice,
+                    model: './models/' + $("#name").val()
+                },
+                success: function(response) {
+                    console.log(response);
+                    if (response.startsWith("[MATCH")) {
+                        window.alert("[ACCESS GRANTED] Both face and voice of login request match");
+
+                        // use window.localStorage to pass the username through to access granted page
+                        window.localStorage.setItem("username", $("#name").val());
+
+                        location.assign("/accessGranted.html");
+                    } else {
+                        window.alert("[ACCESS DENIED] Did not have a match for both face and voice");
+                        location.assign("/");
+                    }
+                },
+                errors: function(exception) {
+                    console.log(exception);
+                    if (exception.responseText.startsWith("Account does not exist, ")){
+                        let msg = "Account name does not exist";
+                        document.getElementById("errors").innerHTML = "<div class='alert alert-danger alert-dismissible fade show animated shake' role='alert'>" + msg + "<button type='button' class='close' data-dismiss='alert' aria-label='Close'><i class='fas fa-times fa-sm'></i></button></div>";
+                        loginBtn.attr("disabled", false);
+                    }
+                    if (exception.responseJSON) {
+                        let msg = exception.responseJSON.error;
+                        document.getElementById("errors").innerHTML = "<div class='alert alert-danger animated shake' role='alert'>" + msg + "</div>"
+                    }
+                }
+            });
+
+            // send post request to app.js through jQuery
+            /*$.ajax({
                 url: '/api/faceLogin',
                 type: 'POST',
                 data: {
@@ -283,7 +320,7 @@ function startup() {
                         document.getElementById("errors").innerHTML = "<div class='alert alert-danger animated shake' role='alert'>" + msg + "</div>"
                     }
                 }
-            });
+            });*/
             window.alert("Verifying user... this may take a moment");
         }
     });
