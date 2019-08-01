@@ -1,4 +1,3 @@
-# importing necessary packages
 import os
 import wave
 import numpy as np

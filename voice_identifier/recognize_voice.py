@@ -1,5 +1,3 @@
-import pyaudio
-import os
 import io
 import sys
 import cv2
@@ -9,14 +7,7 @@ import numpy as np
 from PIL import Image
 import tensorflow as tf
 
-# HYPERPARAMETERS
-ROOT_DIR = os.path.dirname(os.path.dirname(__file__))
-DATABASE_DIR = ROOT_DIR + '/users/'
-FORMAT = pyaudio.paInt16
-CHANNELS = 2
-RATE = 44100
-CHUNK = 1024
-RECORD_SECONDS = 3.5
+# declare threshold that must be met to grant access
 threshold = 60   # subject to change later in development
 
 # fetch data passed through PythonShell from app.js
@@ -60,10 +51,10 @@ def recognize_voice(name):
     # if the percentage is greater than the specified threshold allow access, otherwise deny access
     if percentage >= threshold:
         authentication = True
-        print("[VOICE MATCH] Voice detected is predicted to match " + data['name'] + "'s ==> " + str(percentage))
+        print("[VOICE MATCH] Voice detected is predicted to match " + name + "'s ==> " + str(percentage))
     else:
         authentication = False
-        print("[Voice CONFLICT] Voice detected does not match " + data['name'] + "'s ==> " + str(percentage))
+        print("[Voice CONFLICT] Voice detected does not match " + name + "'s ==> " + str(percentage))
     return authentication
 
 

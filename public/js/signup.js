@@ -265,13 +265,10 @@ function startup() {
                     var serviceWorker;
                     if (reg.installing) {
                         serviceWorker = reg.installing;
-                        // console.log('Service worker installing');
                     } else if (reg.waiting) {
                         serviceWorker = reg.waiting;
-                        // console.log('Service worker installed & waiting');
                     } else if (reg.active) {
                         serviceWorker = reg.active;
-                        // console.log('Service worker active');
                     }
 
                     // wait for the service worker to become activated

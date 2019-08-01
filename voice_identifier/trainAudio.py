@@ -1,4 +1,3 @@
-import pyaudio
 import os
 import time
 import filetype
@@ -8,10 +7,6 @@ import json
 import tensorflow as tf
 
 from data_processing import normalizeSoundTraining, eliminateAmbienceTraining, trainingSpectrogram
-
-# HYPERPARAMETERS
-ROOT_DIR = os.path.dirname(os.path.dirname(__file__))
-DATABASE_DIR = ROOT_DIR + '/users/'
 
 spect_size = 240
 batch_size = 4
@@ -153,21 +148,19 @@ def trainAudio(name):
 
     print("Finished training, saving model...")
 
-        if data['model'] is None:
-            if os.path.exists("./models/" + str(data['name']) + "/"):
-                date = time.time()
-                print("Saving new audio model to: ../models/" + str(data['name']) + "/" + "voice" + ".h5")
-                model.save("./models/" + str(data['name']) + "/" + "voice" + ".h5")    # str(date)
-            else:
-                os.makedirs("./models/" + str(data['name']) + "/")
-                date = time.time()
-                print("Saving new audio model to: ../models/" + str(data['name']) + "/" + "voice" + ".h5")
-                model.save("./models/" + str(data['name']) + "/" + "voice" + ".h5")    # str(date)
+    if data['model'] is None:
+        if os.path.exists("./models/" + str(data['name']) + "/"):
+            date = time.time()
+            print("Saving new audio model to: ../models/" + str(data['name']) + "/" + "voice" + ".h5")
+            model.save("./models/" + str(data['name']) + "/" + "voice" + ".h5")    # str(date)
         else:
-            model.save(data['model'])
-
-        model.summary()
-
+            os.makedirs("./models/" + str(data['name']) + "/")
+            date = time.time()
+            print("Saving new audio model to: ../models/" + str(data['name']) + "/" + "voice" + ".h5")
+            model.save("./models/" + str(data['name']) + "/" + "voice" + ".h5")    # str(date)
+    else:
+        model.save(data['model'])
+    model.summary()
     print("done")
 
 

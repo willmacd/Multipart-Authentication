@@ -1,4 +1,3 @@
-# import the necessary packages
 import os
 import math
 import wave
@@ -90,7 +89,6 @@ def recognizeSpectrogram(username):
     plt.savefig('loginAttempt.png', bbox_inches='tight', dpi=300, transparent=True, pad_inches=0.0)
     os.rename('loginAttempt.png', source + 'loginAttempt.png')
     os.unlink(source + 'loginAttempt.wav')
-
     # fig.axes.get_xaxis().set_visible(True)
     # fig.axes.get_yaxis().set_visible(True)
     # plt.title("Spectrogram of " + username + " loginAttempt.wav")
@@ -129,7 +127,6 @@ def eliminateAmbienceTraining(username):
     train_source = DATABASE_DIR + username + '/audioTraining/user/'
     validation_source = DATABASE_DIR + username + '/audioValidation/user/'
     source_list = [train_source, validation_source]
-
     i = 0
     recognizer = sr.Recognizer()
     for source in source_list:
@@ -158,7 +155,3 @@ def eliminateAmbienceRecognizing(username):
         with open(DATABASE_DIR + username + '/audioComparison/loginAttempt.wav', "wb") as file:
             file.write(adjusted_audio.get_wav_data())
 
-
-# if __name__ == '__main__':
-    # eliminateAmbienceTraining("Will")
-    # trainingSpectrogram('Will')

@@ -11,10 +11,6 @@ from tensorflow.keras.layers import Concatenate, Activation, Dense, Dropout
 
 from data_processing import normalizeSoundTraining, eliminateAmbienceTraining, trainingSpectrogram
 
-# HYPERPARAMETERS
-ROOT_DIR = os.path.dirname(os.path.dirname(__file__))
-DATABASE_DIR = ROOT_DIR + '/users/'
-
 image_size = 160
 spect_size = 240
 img_batch_size = 5
@@ -28,8 +24,6 @@ audioTrainingDir = str(data['audioTrainDir'])
 audioValidationDir = str(data['audioValidationDir'])
 imageTrainingDir = str(data['imageTrainDir'])
 imageValidationDir = str(data['imageValidationDir'])
-# concatTrainDir = str(data['concatTrainDir'])
-# concatValidationDir = str(data['concatValidationDir'])
 
 
 def train():
@@ -97,18 +91,6 @@ def train():
         batch_size=img_batch_size,
         class_mode='binary')
 
-    # concatTrain_generator = train_datagen.flow_from_directory(
-    #     concatTrainDir,
-    #     target_size=(image_size, image_size),
-    #     batch_size=img_batch_size,
-    #     class_mode='binary')
-
-    # concatValidation_generator = validation_datagen.flow_from_directory(
-    #     concatValidationDir,
-    #     target_size=(image_size, image_size),
-    #     batch_size=img_batch_size,
-    #     class_mode='binary')
-
     ##################
     # Model Building #
     ##################
@@ -170,8 +152,6 @@ def train():
     img_validation_steps = imgValidation_generator.n
     audio_steps_per_epoch = audioTrain_generator.n
     audio_validation_steps = audioValidation_generator.n
-    # concat_steps_per_epoch = concatTrain_generator.n
-    # concat_validation_steps = concatValidation_generator.n
 
     img_history = img_model.fit_generator(imgTrain_generator,
                                           steps_per_epoch=img_steps_per_epoch,
@@ -187,12 +167,46 @@ def train():
                                               validation_data=audioValidation_generator,
                                               validation_steps=audio_validation_steps)
 
+    # unfreeze the lower levels of the audio and image networks
+    base_model_img.trainable = True
+    base_model_audio.trainable = True
+
+    # define the layers at which we will unfreeze
+    fine_tune_at = 100
+
+    # keep all layers before the 'fine_tune_at' frozen for both audio and visual model
+    for layers in base_model_img[:fine_tune_at]:
+        layers.trainable = False
+    for layers in base_model_audio[:fine_tune_at]:
+        layers.trainable = False
+
+    # recompile the img_model and audio_model after having unfrozen the lower levels
+    img_model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=2e-5),
+                      loss='binary_crossentropy',
+                      metrics=['accuracy'])
+
+    audio_model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=2e-5),
+                        loss='binary_crossentropy',
+                        metrics=['accuracy'])
+
+    # train the recompiled im_model and audio_model
+    img_tune_history = img_model.fit_generator(imgTrain_generator,
+                                               steps_per_epoch=img_steps_per_epoch,
+                                               epochs=img_epochs,
+                                               workers=4,
+                                               validation_data=imgValidation_generator,
+                                               validation_steps=img_validation_steps)
+
+    audio_tune_history = audio_model.fit_generator(audioTrain_generator,
+                                                   steps_per_epoch=audio_steps_per_epoch,
+                                                   epochs=audio_epochs,
+                                                   workers=4,
+                                                   validation_data=audioValidation_generator,
+                                                   validation_steps=audio_validation_steps)
 
     ######################
     # Concatenate models #
     ######################
-
-    # todo check that the concatenated model works, if not attempt another way to train
 
     # concatenate audio_model and img_model to create a multimodal network with spectrogram and face images as inputs
     merged_output = Concatenate(axis=-1)([img_model.output, audio_model.output])
@@ -201,21 +215,17 @@ def train():
     out = Dense(32, activation='sigmoid')(out)
     out1 = Dense(1, activation='sigmoid')(out)
 
+    # create a new model by concatenating the output tensors of the individual audio and img models
     concat_model = Model([img_model.input, audio_model.input], out)
 
+    # compile the concatenated model
     concat_model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=0.0001),
                          loss='binary_crossentropy',
                          metrics=['accuracy'])
 
-    # concat_history = concat_model.fit_generator(concatTrain_generator,
-    #                                             steps_per_epoch=concat_steps_per_epoch,
-    #                                             epochs=10,
-    #                                             workers=4,
-    #                                             validation_data=concatValidation_generator,
-    #                                             validation_steps=range(concat_validation_steps))
-
     print("Finished training, saving model...")
 
+    # save the concatenated model containing the multi-modality of face and voice recognition
     if data['img_model'] is None or data['audio_model'] is None:
         if os.path.exists("./models/" + str(data['name']) + "/"):
             date = time.time()

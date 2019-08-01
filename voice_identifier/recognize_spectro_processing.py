@@ -1,4 +1,3 @@
-# import necessary packages
 import os
 import sys
 import json

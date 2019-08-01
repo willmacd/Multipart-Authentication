@@ -131,8 +131,6 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                     let imgValidationDir = parentDir + "imgValidation/";
                     let audioValidationDir = parentDir + "audioValidation/";
                     let audioTrainDir = parentDir + "audioTraining/";
-                    let concatTrainDir = parentDir + "concatTraining/";
-                    let concatValidationDir = parentDir + "concatValidation/";
                     let data = {
                         name: req.body.name,
                         trainDir: imgTrainDir,
@@ -140,8 +138,6 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                         modelDir: "./models/" + req.body.name + "/",
                         audioTrainDir: audioTrainDir,
                         audioValidationDir: audioValidationDir,
-                        concatTrainDir: concatTrainDir,
-                        concatValidationDir: concatValidationDir,
                         subscription: subscription,
                     };
 
@@ -151,8 +147,6 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                         fs.mkdirSync(imgTrainDir);
                         fs.mkdirSync(audioValidationDir);
                         fs.mkdirSync(audioTrainDir);
-                        fs.mkdirSync(concatValidationDir);
-                        fs.mkdirSync(concatTrainDir);
                         fs.mkdirSync(audioValidationDir + "user/");
                         fs.mkdirSync(audioTrainDir + "user/");
                         fs.mkdirSync(audioValidationDir + "not/");
@@ -161,10 +155,6 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                         fs.mkdirSync(imgTrainDir + "user/");
                         fs.mkdirSync(imgValidationDir + "not/");
                         fs.mkdirSync(imgTrainDir + "not/");
-                        fs.mkdirSync(concatValidationDir + "user/");
-                        fs.mkdirSync(concatTrainDir + "user/");
-                        fs.mkdirSync(concatValidationDir + "not/");
-                        fs.mkdirSync(concatTrainDir + "not/");
                     }
 
                     for (let i = 0; i < req.body.audio.length; i++) {
@@ -215,24 +205,13 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                                 if (err) {
                                     res.send(err)
                                 } else {
-                                    ncp('./randomSpectrograms', concatTrainDir + 'not/');
-                                    ncp('./randomSpectrograms', concatValidationDir + 'not/');
-                                    ncp('./randomImages', concatTrainDir + 'not/');
-                                    ncp('./randomImages', concatValidationDir + 'not/');
-                                    ncp('./users/' + req.body.name + '/imgTraining/user', concatTrainDir + 'user/');
-                                    ncp('./users/' + req.body.name + '/imgValidation/user', concatValidationDir + 'user/');
                                     console.log("Beginning training");
                                     res.redirect("/");
                                     let trainShell = new PythonShell ('./voice_identifier/merge_train.py');
                                     trainShell.send(JSON.stringify({name: req.body.name, audioTrainDir: audioTrainDir, audioValidationDir: audioValidationDir,
-                                        imageTrainDir: imgTrainDir, imageValidationDir: imgValidationDir, concatTrainDir: concatTrainDir, concatValidationDir: concatValidationDir,
-                                        epochs: null, img_model: null, audio_model: null}));
+                                        imageTrainDir: imgTrainDir, imageValidationDir: imgValidationDir, epochs: null, img_model: null, audio_model: null}));
                                     trainShell.on('message', (message) => {
-                                        if(message.startsWith("Conversion from")) {
-                                            ncp('./users/' + req.body.name + '/audioTraining/user', concatTrainDir + 'user/');
-                                            ncp('./users/' + req.body.name + '/audioValidation/user', concatValidationDir + 'user/');
-                                        }
-                                        else if(message === 'done') {
+                                        if(message === 'done') {
                                             console.log("Training is Complete");
                                             db.collection('users').insertOne(data, (err, result) => {
                                                 if (err) return console.log(err);

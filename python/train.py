@@ -7,18 +7,12 @@ import matplotlib.pyplot as plt
 
 lines = sys.stdin.readline()
 data = json.loads(lines)
-
+train_dir = str(data['trainingDir'])
+validation_dir = str(data["validationDir"])
 
 ##################
 #Image Processing#
 ##################
-
-
-train_dir = str(data['trainingDir'])
-validation_dir = str(data["validationDir"])
-
-# print('Total training images: ' + str(len(os.listdir(train_dir))))
-# print('Total validation images: ' + str(len(os.listdir(validation_dir))))
 
 image_size = 160
 batch_size = 5
@@ -42,11 +36,9 @@ validation_generator = validation_datagen.flow_from_directory(
     batch_size=batch_size,
     class_mode='binary')
 
-
 ##################
 # Model Building #
 ##################
-
 
 # check if input model exists
 if data['model'] is None:
@@ -76,11 +68,9 @@ else:
     # load input model
     model = tf.keras.models.load_model(str(data['model']))
 
-
 ############
 # Training #
 ############
-
 
 # Start with training the model with the base model frozen
 if data["epochs"] is None:
@@ -136,11 +126,9 @@ else:
 
 model.summary()
 
-
 ############
 # Plotting #
 ############
-
 
 if data['plot']:
     acc = history.history['acc']
