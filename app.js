@@ -201,20 +201,7 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                             ncp("./randomImages", imgValidationDir + "not/", (err) => {
                                 if (err) {
                                     res.send(err)
-                                } /*else {
-                                    console.log("Beginning training");
-                                    res.redirect("/");
-                                    // begin training face identification model
-                                    let trainShell = new PythonShell('./python/train.py');
-                                    trainShell.send(JSON.stringify({ name: req.body.name, trainingDir: trainDir, validationDir: validationDir, epochs: 10, plot: false, model: null }));
-                                    trainShell.on('message', (message) => {
-                                        if (message === 'done') {
-                                            console.log("Vision Training Complete");
-                                        } else {
-                                            console.log(message)
-                                        }
-                                    });
-                                }*/
+                                }
                             })
                         }
                     });
@@ -228,26 +215,6 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                                 if (err) {
                                     res.send(err)
                                 } else {
-                                    /*let audioShell = new PythonShell('./voice_identifier/trainAudio.py');
-                                    audioShell.send(JSON.stringify({name: req.body.name, trainingDir: audioTrainDir, validationDir: audioValidationDir, epochs: 10, plot: false, model: null }));
-                                    audioShell.on('message', (message) => {
-                                        if (message === 'done') {
-                                            console.log("Audio Training Complete");
-                                            db.collection('users').insertOne(data, (err, result) => {
-                                                if (err) return console.log(err);
-                                                console.log('saved to database');
-                                                if (subscription !== false) {
-                                                    console.log("Sending Notification");
-                                                    webPush.sendNotification(subscription, payload).catch(error => {
-                                                        console.error(error.stack);
-                                                    });
-                                                }
-                                            });
-                                        }
-                                        else {
-                                            console.log(message)
-                                        }
-                                    });*/
                                     ncp('./randomSpectrograms', concatTrainDir + 'not/');
                                     ncp('./randomSpectrograms', concatValidationDir + 'not/');
                                     ncp('./randomImages', concatTrainDir + 'not/');
@@ -429,134 +396,6 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                 }
             })
         });
-
-        /*app.post('/api/voiceLogin', (req, res) => {
-            var exception = false;
-            db.collection('users').find({"name": req.body.name}).toArray(function(err, results) {
-                if (err) console.log(err);
-                if (results.length === 0) {
-                    console.log("Account does not exist, could not sign into specified name");
-                    res.status(404).send("Account does not exist, could not sign into specified name");
-                    exception = true;
-                }
-                else{
-                    // check for existing directory and/or audio comparison files and replace if need be
-                    let parentDir = "./users/" + req.body.name + "/";
-                    if(!fs.existsSync(parentDir + 'audioComparison/')){
-                        fs.mkdirSync(parentDir + 'audioComparison/');
-                        console.log("'audioComparison' directory successfully created");
-                        fs.writeFileSync(parentDir + 'audioComparison/loginAttempt.wav', Buffer.from(req.body.audio.toString().replace('data:audio/wav;base64,', ''), 'base64'));
-                        console.log("'loginAttempt.wav' has been successfully uploaded to the database");
-                    }
-                    else if(fs.existsSync(parentDir + 'audioComparison/') && !fs.existsSync(parentDir + 'audioComparison/loginAttempt.wav') && !fs.existsSync(parentDir + 'audioComparison/loginAttempt.png')) {
-                        fs.writeFileSync(parentDir + 'audioComparison/loginAttempt.wav', Buffer.from(req.body.audio.toString().replace('data:audio/wav;base64,', ''), 'base64'));
-                        console.log("'audioComparison' directory already exists");
-                        console.log("'loginAttempt.wav' has successfully been uploaded to the database");
-                    }
-                    else if(fs.existsSync(parentDir + 'audioComparison/loginAttempt.wav') && !fs.existsSync(parentDir + 'audioComparison/loginAttempt.png')) {
-                        console.log("'audioComparison' directory already exists");
-                        console.log("'loginAttempt.wav' already exists");
-                        fs.unlinkSync(parentDir + 'audioComparison/loginAttempt.wav');
-                        console.log("Existing 'loginAttempt.wav' has successfully been removed from directory");
-                        fs.writeFileSync(parentDir + 'audioComparison/loginAttempt.wav', Buffer.from(req.body.audio.toString().replace('data:audio/wav;base64,', ''), 'base64'));
-                        console.log("New 'loginAttempt.wav' has been successfully uploaded to the database");
-                    }
-                    else if(!fs.existsSync(parentDir + 'audioComparison/loginAttempt.wav') && fs.existsSync(parentDir + 'audioComparison/loginAttempt.png')) {
-                        console.log("'audioComparison' directory already exists");
-                        console.log("'loginAttempt.png' already exists");
-                        fs.unlinkSync(parentDir + 'audioComparison/loginAttempt.png');
-                        console.log("Existing 'loginAttempt.png' has successfully been removed from directory");
-                        fs.writeFileSync(parentDir + 'audioComparison/loginAttempt.wav', Buffer.from(req.body.audio.toString().replace('data:audio/wav;base64,', ''), 'base64'));
-                        console.log("New 'loginAttempt.wav' has been successfully uploaded to the database");
-                    }
-                    else if(fs.existsSync(parentDir + 'audioComparison/loginAttempt.wav') && fs.existsSync(parentDir + 'audioComparison/loginAttempt.png')) {
-                        console.log("'audioComparison' directory already exists");
-                        console.log("'loginAttempt.wav' already exists");
-                        console.log("'loginAttempt.png' already exists");
-                        fs.unlinkSync(parentDir + 'audioComparison/loginAttempt.png');
-                        console.log("Existing 'loginAttempt.png' was successfully removed from directory");
-                    }
-                }
-                if (exception === false) {
-                    let spectroShell = new PythonShell('./voice_identifier/recognize_spectro_processing.py');
-                    spectroShell.send(JSON.stringify({name: req.body.name}));
-                    spectroShell.on('message', (message) => {
-                        if(message === "done"){
-                            console.log("'loginAttempt.wav' has successfully been converted to 'loginAttempt.png' containing respective spectrogram")
-                        }
-                        else {
-                            console.log(message)
-                        }
-                    });
-                    spectroShell.end(function(err) {
-                        if (err) throw err;
-                        let model = req.body.model + '/voice.h5';
-                        let img = fs.readFileSync("./users/" + req.body.name + "/audioComparison/loginAttempt.png");
-                        let voiceShell = new PythonShell('./voice_identifier/recognize_voice.py');
-                        voiceShell.send(JSON.stringify( {name: req.body.name,
-                            image: Buffer.from(img).toString('base64'), model: model}));
-                        voiceShell.on('message', (message) => {
-                            console.log(message);
-                            res.write(message + '\n');
-                            if(message.startsWith("[VOICE")) {
-                                res.end();
-                            }
-                        });
-                    })
-                }
-            });
-        });
-
-        app.post('/api/faceLogin', (req, res) => {
-            var exception = false;
-            db.collection('users').find({"name": req.body.name}).toArray(function(err, results) {
-                //if (err) console.log(err);
-                if (results.length == 0) {
-                    console.log("Account does not exist, could not sign into specified name");
-                    res.status(404).send("Account does not exist, could not sign into specified name");
-                    exception = true;
-                }
-                else{
-                    // check for existing directory and/or face comparison files and replace if need be
-                    let parentDir = "./users/" + req.body.name + "/";
-                    if(!fs.existsSync(parentDir + "faceComparison/")) {
-                        fs.mkdirSync(parentDir + "faceComparison/");
-                        console.log("'faceComparison' directory successfully created");
-                        writeFaceComparisonFile(req);
-                        console.log("'loginAttempt.png' has been successfully uploaded to the database")
-                    }
-                    else if(fs.existsSync(parentDir + 'faceComparison/') && !fs.existsSync(parentDir + 'faceComparison/loginAttempt.png')) {
-                        console.log("'faceComparison' directory already exists");
-                        writeFaceComparisonFile(req);
-                        console.log("'loginAttempt.png' has been successfully added to the database");
-                    }
-                    else if(fs.existsSync(parentDir + 'faceComparison/loginAttempt.png')) {
-                        console.log("'loginAttempt.png' already exists");
-                        fs.unlinkSync(parentDir + 'faceComparison/loginAttempt.png');
-                        console.log("Existing 'loginAttempt.png' has successfully been removed from the directory");
-                        writeFaceComparisonFile(req);
-                        console.log("New 'loginAttempt.png' has been successfully added to the database")
-                    }
-                }
-                if (exception === false) {
-                    let model = req.body.model + '/vision.h5';
-                    let img = fs.readFileSync("./users/" + req.body.name + "/faceComparison/loginAttempt.png");
-                    let faceShell = new PythonShell('./python/predict.py');
-                    faceShell.send(JSON.stringify({name: req.body.name,
-                        image: Buffer.from(img).toString('base64'), model: model}));
-                    faceShell.on('message', (message) => {
-                        console.log(message);
-                        res.write(message + '\n');
-                        if(message.startsWith("[FACE")) {
-                            res.end();
-                        }
-                    });
-                    faceShell.end(function(err) {
-                        if (err) throw err;
-                    });
-                }
-            });
-        });*/
     }
 });
 

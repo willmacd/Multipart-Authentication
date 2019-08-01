@@ -192,6 +192,7 @@ function startup() {
             });
         }
 
+        // if no audio recording was taken, enable tooltip to indicate to user
         if(voice.length === 0) {
             audioBtn.tooltip('enable');
             audioBtn.tooltip('show');
@@ -202,6 +203,7 @@ function startup() {
             });
         }
 
+        // if image of face was not taken, enable tooltip to indicate to user
         if(face.length === 0) {
             captureBtn.tooltip('enable');
             captureBtn.tooltip('show');
@@ -212,9 +214,10 @@ function startup() {
             });
         }
 
+        // if the user isnt missing any data fields continue with login
         if(!errors) {
             loginBtn.attr("disabled", true);
-
+            //post request sending all collected data to app.js
             $.ajax({
                 url: '/api/login',
                 type: 'post',
@@ -226,20 +229,25 @@ function startup() {
                 },
                 success: function(response) {
                     console.log(response);
+                    // if response starts with [MATCH] send pop up to indicate access has been granted
                     if (response.startsWith("[MATCH")) {
                         window.alert("[ACCESS GRANTED] Both face and voice of login request match");
 
                         // use window.localStorage to pass the username through to access granted page
                         window.localStorage.setItem("username", $("#name").val());
 
+                        // send user to access granted page
                         location.assign("/accessGranted.html");
                     } else {
+                        // if the response doesn't start with [MATCH] then send a pop up indicating access denied
                         window.alert("[ACCESS DENIED] Did not have a match for both face and voice");
+                        //send user back to home page
                         location.assign("/");
                     }
                 },
                 errors: function(exception) {
                     console.log(exception);
+                    // indicate to user if the account they are trying to sign in as is not an existing account
                     if (exception.responseText.startsWith("Account does not exist, ")){
                         let msg = "Account name does not exist";
                         document.getElementById("errors").innerHTML = "<div class='alert alert-danger alert-dismissible fade show animated shake' role='alert'>" + msg + "<button type='button' class='close' data-dismiss='alert' aria-label='Close'><i class='fas fa-times fa-sm'></i></button></div>";
@@ -251,76 +259,6 @@ function startup() {
                     }
                 }
             });
-
-            // send post request to app.js through jQuery
-            /*$.ajax({
-                url: '/api/faceLogin',
-                type: 'POST',
-                data: {
-                    name: $("#name").val(),
-                    image: face,
-                    model: './models/' + $("#name").val(),
-                },
-                success: function (response) {
-                    console.log(response);
-                    if (response.startsWith('[FACE MATCH]')) {
-                        faceMatch = true;
-                    } else {
-                        faceMatch = false;
-                    }
-                },
-                error: function (exception) {
-                    console.log(exception);
-                    if (exception.responseText.startsWith("Account does not exist, ")){
-                        let msg = "Account name does not exist";
-                        document.getElementById("errors").innerHTML = "<div class='alert alert-danger alert-dismissible fade show animated shake' role='alert'>" + msg + "<button type='button' class='close' data-dismiss='alert' aria-label='Close'><i class='fas fa-times fa-sm'></i></button></div>";
-                        loginBtn.attr("disabled", false);
-                    }
-                    if (exception.responseJSON) {
-                        let msg = exception.responseJSON.error;
-                        document.getElementById("errors").innerHTML = "<div class='alert alert-danger animated shake' role='alert'>" + msg + "</div>"
-                    }
-                }
-            });
-
-            // send post request to app.js through jQuery
-            $.ajax({
-                url: '/api/voiceLogin',
-                type: 'POST',
-                data: {
-                    name: $("#name").val(),
-                    audio: voice,
-                    model: './models/' + $("#name").val(),
-                },
-                success: function (response) {
-                    console.log(response);
-                    if (response.startsWith('[VOICE MATCH]')) {
-                        voiceMatch = true;
-                    } else {
-                        voiceMatch = false;
-                    }
-                    // since face comparison takes longer than voice, check matches upon completion of face recognition
-                    if(faceMatch === true && voiceMatch === true) {
-                        window.alert("[ACCESS GRANTED] Both face and voice of login request match");
-
-                        // use window.localStorage to pass the username through to access granted page
-                        window.localStorage.setItem("username", $("#name").val());
-
-                        location.assign("/accessGranted.html");
-                    }
-                    else {
-                        window.alert("[ACCESS DENIED] Did not have a match for both face and voice");
-                        location.assign("/");
-                    }
-                },
-                error: function (exception) {
-                    console.log(exception);
-                    if (exception.responseJSON) {
-                        let msg = exception.responseJSON.error;
-                        document.getElementById("errors").innerHTML = "<div class='alert alert-danger animated shake' role='alert'>" + msg + "</div>"
-                    }
-                }
-            });*/
             window.alert("Verifying user... this may take a moment");
         }
     });

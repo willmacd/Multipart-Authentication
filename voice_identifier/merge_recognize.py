@@ -9,7 +9,7 @@ from PIL import Image
 import tensorflow as tf
 
 # set threshold for authentication
-threshold = 60   # subject to change later in development
+threshold = 53.4   # subject to change later in development
 
 # fetch data passed through PythonShell from app.js
 lines = sys.stdin.readline()
@@ -18,8 +18,9 @@ name = str(data['name'])
 model = str(data['model'])
 
 
+# function to recognize user using multimodal visual and audio models
 def recognize():
-    # check if there was an existing model passed through python shell
+    # check if there was an existing model passed through python shell otherwise return to app.js
     if data['model'] is not None:
         model = tf.keras.models.load_model(str(data['model']))
     else:
@@ -30,7 +31,7 @@ def recognize():
     img64 = str.encode(data['image'])
     spectro64 = str.encode(data['spectro'])
 
-    # if img64/spectro64 missing padding, add padding to base64 file
+    # if img64/spectro64 are missing padding, add padding to base64 file
     missing_padding = len(data) % 4
     if missing_padding:
         img64 += b'=' * (4 - missing_padding)
@@ -40,13 +41,13 @@ def recognize():
     decodeImg = base64.b64decode(img64)
     decodeSpectro = base64.b64decode(spectro64)
 
-    # create an image object of the decoded image data using PIL
+    # create an image object of the decoded image data using PIL library
     imgObj = Image.open(io.BytesIO(decodeImg))
     spectroObj = Image.open(io.BytesIO(decodeSpectro))
     img = cv2.cvtColor(np.array(imgObj), cv2.COLOR_BGR2RGB)
     spectro = cv2.cvtColor(np.array(spectroObj), cv2.COLOR_BGR2RGB)
 
-    # resize imput data and image data array to fit the output of MobileNetV2
+    # resize input data and image data array to fit the output of MobileNetV2 (required a newaxis to be added)
     resizeImg = cv2.resize(img, (160, 160))
     image = resizeImg[np.newaxis, :, :, :]
     resizeSpectro = cv2.resize(spectro, (240, 240))
