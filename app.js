@@ -365,10 +365,7 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                                 image: Buffer.from(img).toString('base64'), model: model}));
                             recognizeShell.on('message', (message) => {
                                 console.log(message);
-                                res.write(message + '\n');
-                                if(message.startsWith("[MATCH") || message.startsWith("[CONFLICT")) {
-                                    res.end();
-                                }
+                                res.send(message + '\n');
                             })
                         });
                     }

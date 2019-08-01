@@ -175,10 +175,10 @@ def train():
     fine_tune_at = 100
 
     # keep all layers before the 'fine_tune_at' frozen for both audio and visual model
-    for layers in base_model_img[:fine_tune_at]:
-        layers.trainable = False
-    for layers in base_model_audio[:fine_tune_at]:
-        layers.trainable = False
+    for layer in base_model_img.layers[:fine_tune_at]:
+        layer.trainable = False
+    for layer in base_model_audio.layers[:fine_tune_at]:
+        layer.trainable = False
 
     # recompile the img_model and audio_model after having unfrozen the lower levels
     img_model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=2e-5),

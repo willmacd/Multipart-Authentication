@@ -1,3 +1,4 @@
+import os
 import io
 import sys
 import cv2
@@ -7,8 +8,11 @@ import numpy as np
 from PIL import Image
 import tensorflow as tf
 
+# ignore warning thrown by tensorflow interfering with login process
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
 # set threshold for authentication
-threshold = 53.4   # subject to change later in development
+threshold = 46.03   # subject to change later in development
 
 # fetch data passed through PythonShell from app.js
 lines = sys.stdin.readline()
@@ -59,10 +63,10 @@ def recognize():
     # if the percentage is greater than the specified threshold allow access, otherwise deny access
     if percentage >= threshold:
         authentication = True
-        print("[MATCH] Face and voice detected is predicted to match " + data['name'] + "'s ==> " + str(percentage))
+        print("[MATCH] Face and voice detected is predicted to match " + name + "'s ==> " + str(percentage))
     else:
         authentication = False
-        print("[CONFLICT] Face and voice detected does not match " + data['name'] + "'s ==> " + str(percentage))
+        print("[CONFLICT] Face and voice detected does not match " + name + "'s ==> " + str(percentage))
 
 
 if __name__ == '__main__':

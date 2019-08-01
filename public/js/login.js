@@ -230,7 +230,7 @@ function startup() {
                 success: function(response) {
                     console.log(response);
                     // if response starts with [MATCH] send pop up to indicate access has been granted
-                    if (response.startsWith("[MATCH")) {
+                    if (response.startsWith('[MATCH]')) {
                         window.alert("[ACCESS GRANTED] Both face and voice of login request match");
 
                         // use window.localStorage to pass the username through to access granted page
