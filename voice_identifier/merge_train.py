@@ -7,7 +7,7 @@ import json
 
 import tensorflow as tf
 from tensorflow.keras import Sequential, Model
-from tensorflow.keras.layers import Concatenate, Activation, Dense, Dropout
+from tensorflow.keras.layers import concatenate, Activation, Dense, Dropout, BatchNormalization, PReLU
 
 from data_processing import normalizeSoundTraining, eliminateAmbienceTraining, trainingSpectrogram
 
@@ -209,14 +209,18 @@ def train():
     ######################
 
     # concatenate audio_model and img_model to create a multimodal network with spectrogram and face images as inputs
-    merged_output = Concatenate(axis=-1)([img_model.output, audio_model.output])
-    out = Dense(128, activation='sigmoid')(merged_output)
-    out = Dropout(0.8)(out)
-    out = Dense(32, activation='sigmoid')(out)
-    out1 = Dense(1, activation='sigmoid')(out)
+    merged_output = concatenate([img_model.output, audio_model.output])
+
+    layer = BatchNormalization()(merged_output)
+    layer = Dense(300)(layer)
+    layer = PReLU()(layer)
+    layer = Dropout(0.8)(layer)
+    layer = Dense(1)(layer)
+    layer = BatchNormalization()(layer)
+    out = Activation('sigmoid')(layer)
 
     # create a new model by concatenating the output tensors of the individual audio and img models
-    concat_model = Model([img_model.input, audio_model.input], out)
+    concat_model = Model([img_model.input, audio_model.input], [out])
 
     # compile the concatenated model
     concat_model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=0.0001),
@@ -229,13 +233,13 @@ def train():
     if data['img_model'] is None or data['audio_model'] is None:
         if os.path.exists("./models/" + str(data['name']) + "/"):
             date = time.time()
-            print("Saving new model to: ../models/" + str(data['name']) + "/" + str(date) + ".h5")
-            concat_model.save("./models/" + str(data['name']) + "/" + str(date) + ".h5")
+            print("Saving new model to: ../models/" + name + "/" + str(date) + ".h5")
+            concat_model.save("./models/" + name + "/" + str(date) + ".h5")
         else:
-            os.makedirs("./models/" + str(data['name']) + "/")
+            os.makedirs("./models/" + name + "/")
             date = time.time()
-            print("Saving new model to: ../models/" + str(data['name']) + "/" + str(date) + ".h5")
-            concat_model.save("./models/" + str(data['name']) + "/" + str(date) + ".h5")
+            print("Saving new model to: ../models/" + name + "/" + str(date) + ".h5")
+            concat_model.save("./models/" + name + "/" + str(date) + ".h5")
     else:
         concat_model.save(data['img_model'])
         concat_model.save(data['audio_model'])

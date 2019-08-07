@@ -1,6 +1,7 @@
 import os
 import math
 import wave
+import numpy as np
 from scipy import signal
 from scipy.io.wavfile import read
 import matplotlib.pyplot as plt
@@ -54,8 +55,8 @@ def trainingSpectrogram(username):
         for wav in wav_files:
             # reading audio files of speaker
             sr, audio = read(source + wav)
-            freq, times, spectrogram = signal.spectrogram(audio, sr)
-            plt.pcolormesh(times, freq, spectrogram)
+            freq, times, spectrogram = signal.spectrogram(audio, sr, nfft=512)
+            plt.pcolormesh(times, freq, 10*np.log10(spectrogram))
             fig = plt.imshow(spectrogram, aspect='auto', origin='lower',
                              extent=[times.min(), times.max(), freq.min(), freq.max()])
             fig.axes.get_xaxis().set_visible(False)
@@ -81,8 +82,8 @@ def recognizeSpectrogram(username):
         os.unlink(source + "loginAttempt.png")
 
     sr, audio = read(source + "loginAttempt.wav")
-    freq, times, spectrogram = signal.spectrogram(audio, sr)
-    plt.pcolormesh(times, freq, spectrogram)
+    freq, times, spectrogram = signal.spectrogram(audio, sr, nfft=512)
+    plt.pcolormesh(times, freq, 10*np.log10(spectrogram))
     fig = plt.imshow(spectrogram, aspect='auto', origin='lower', extent=[times.min(), times.max(), freq.min(), freq.max()])
     fig.axes.get_xaxis().set_visible(False)
     fig.axes.get_yaxis().set_visible(False)
