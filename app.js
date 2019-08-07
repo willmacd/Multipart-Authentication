@@ -207,7 +207,7 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                                 } else {
                                     console.log("Beginning training");
                                     res.redirect("/");
-                                    let trainShell = new PythonShell ('./voice_identifier/merge_train.py');
+                                    let trainShell = new PythonShell ('./python/merge_train.py');
                                     trainShell.send(JSON.stringify({name: req.body.name, audioTrainDir: audioTrainDir, audioValidationDir: audioValidationDir,
                                         imageTrainDir: imgTrainDir, imageValidationDir: imgValidationDir, epochs: null, img_model: null, audio_model: null}));
                                     trainShell.on('message', (message) => {
@@ -345,7 +345,7 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                         console.log("Existing 'loginAttempt.png' was successfully removed from directory");
                     }
                     if (exception === false) {
-                        let spectroShell = new PythonShell('./voice_identifier/recognize_spectro_processing.py');
+                        let spectroShell = new PythonShell('./python/recognize_spectro_processing.py');
                         spectroShell.send(JSON.stringify({name: req.body.name}));
                         spectroShell.on('message', (message) => {
                             if(message === "done"){
@@ -360,7 +360,7 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                             let model = req.body.model + '/' + file;
                             let spectro = fs.readFileSync("./users/" + req.body.name + "/audioComparison/loginAttempt.png");
                             let img = fs.readFileSync("./users/" + req.body.name + "/faceComparison/loginAttempt.png");
-                            let recognizeShell = new PythonShell('./voice_identifier/merge_recognize.py');
+                            let recognizeShell = new PythonShell('./python/merge_recognize.py');
                             recognizeShell.send(JSON.stringify({name: req.body.name, spectro: Buffer.from(spectro).toString('base64'),
                                 image: Buffer.from(img).toString('base64'), model: model}));
                             recognizeShell.on('message', (message) => {
