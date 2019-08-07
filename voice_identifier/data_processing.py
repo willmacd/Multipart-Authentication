@@ -37,7 +37,6 @@ def trimWavFile(originPath, outputPath):
 def trainingSpectrogram(username):
     train_source = DATABASE_DIR + username + '/audioTraining/user/'
     validation_source = DATABASE_DIR + username + '/audioValidation/user/'
-
     source_list = [train_source, validation_source]
 
     for source in source_list:
@@ -45,12 +44,10 @@ def trainingSpectrogram(username):
             # if file already exists, remove it from directory
             if str(i) + ".png" in os.listdir(source):
                 os.unlink(source + username + str(i) + ".png")
-
         if source is train_source:
             i = 0
         else:
             i = 3
-
         wav_files = os.listdir(source)
         for wav in wav_files:
             # reading audio files of speaker
@@ -156,3 +153,59 @@ def eliminateAmbienceRecognizing(username):
         with open(DATABASE_DIR + username + '/audioComparison/loginAttempt.wav', "wb") as file:
             file.write(adjusted_audio.get_wav_data())
 
+
+# Normalize the sound of all audio files for non-user spectrogram data
+def normalizeSoundRandSpectro():
+    source = ROOT_DIR + '/randomSpectrograms/'
+    avg_amplitude = -20.0  # measured in dBFS (decibels relative to full scale)
+    wav_files = os.listdir(source)
+    for wav in wav_files:
+        audio = AS.from_file(source + wav, "wav")
+        change_in_dBFS = avg_amplitude - audio.dBFS
+        normalized_audio = audio.apply_gain(change_in_dBFS)
+        normalized_audio.export(source + wav, format='wav')
+
+
+# eliminate background noise for all audio files for non-user spectrogram data
+def eliminateAmbienceRandSpectro():
+    source = ROOT_DIR + '/randomSpectrograms/'
+    i = 0
+    recognizer = sr.Recognizer()
+    wav_files = os.listdir(source)
+    for wav in wav_files:
+        i = i + 1
+        audio_file = sr.AudioFile(source + wav)
+        with audio_file as sound:
+            recognizer.adjust_for_ambient_noise(sound, duration=0.5)
+            adjusted_audio = recognizer.record(sound)
+
+            # write adjusted audio to a WAV file
+            with open(source + wav, "wb") as file:
+                file.write(adjusted_audio.get_wav_data())
+
+
+# create spectrograms for all aoudio files of non-users
+def nonuserSpectrograms():
+    # fetch directory to where non-user spectrogram are saved
+    source = ROOT_DIR + '/randomSpectrograms/'
+    i = 0
+    wav_files = os.listdir(source)
+    for wav in wav_files:
+        # reading audio files of speaker
+        sr, audio = read(source + wav)
+        freq, times, spectrogram = signal.spectrogram(audio, sr, nfft=512)
+        plt.pcolormesh(times, freq, 10*np.log10(spectrogram))
+        fig = plt.imshow(spectrogram, aspect='auto', origin='lower',
+                         extent=[times.min(), times.max(), freq.min(), freq.max()])
+        fig.axes.get_xaxis().set_visible(False)
+        fig.axes.get_yaxis().set_visible(False)
+        plt.savefig("spectro" + str(i) + '.png', bbox_inches='tight', dpi=300, transparent=True, pad_inches=0.0)
+        os.rename("spectro" + str(i) + '.png', source + "spectro" + str(i) + '.png')
+        os.unlink(source + wav)
+        i = i + 1
+        # fig.axes.get_xaxis().set_visible(True)
+        # fig.axes.get_yaxis().set_visible(True)
+        # plt.title("Spectrogram of " + username + wav)
+        # plt.xlabel('Time [sec]')
+        # plt.ylabel('Frequency [Hz]')
+        # plt.show()
