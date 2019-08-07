@@ -35,6 +35,7 @@ def trimWavFile(originPath, outputPath):
 
 # create a spectrogram for each of the training wav files for a specified user
 def trainingSpectrogram(username):
+    # specifying key directories to be used
     train_source = DATABASE_DIR + username + '/audioTraining/user/'
     validation_source = DATABASE_DIR + username + '/audioValidation/user/'
     source_list = [train_source, validation_source]
@@ -52,6 +53,7 @@ def trainingSpectrogram(username):
         for wav in wav_files:
             # reading audio files of speaker
             sr, audio = read(source + wav)
+            # create spectrogram with extracted features from '.wav' file
             freq, times, spectrogram = signal.spectrogram(audio, sr, nfft=512)
             plt.pcolormesh(times, freq, 10*np.log10(spectrogram))
             fig = plt.imshow(spectrogram, aspect='auto', origin='lower',
@@ -78,7 +80,9 @@ def recognizeSpectrogram(username):
     if "loginAttempt.png" in os.listdir(source):
         os.unlink(source + "loginAttempt.png")
 
+    # reading audio file from speaker
     sr, audio = read(source + "loginAttempt.wav")
+    # create a spectrogram with extracted features from '.wav' file
     freq, times, spectrogram = signal.spectrogram(audio, sr, nfft=512)
     plt.pcolormesh(times, freq, 10*np.log10(spectrogram))
     fig = plt.imshow(spectrogram, aspect='auto', origin='lower', extent=[times.min(), times.max(), freq.min(), freq.max()])
@@ -97,14 +101,19 @@ def recognizeSpectrogram(username):
 
 # Normalize the sound of all audio files for training data
 def normalizeSoundTraining(username):
+    # specify key directories to be used
     train_source = DATABASE_DIR + username + '/audioTraining/user/'
     validation_source = DATABASE_DIR + username + '/audioValidation/user/'
     source_list = [train_source, validation_source]
 
+    # loop through source directories
     for source in source_list:
+        # specify average audio amplitude to normalize the audio to
         avg_amplitude = -20.0  # measured in dBFS (decibels relative to full scale)
         wav_files = os.listdir(source)
+        # loop through files within the specified source directory
         for wav in wav_files:
+            # normalize and save audio files to their respective directories
             audio = AS.from_file(source + wav, "wav")
             change_in_dBFS = avg_amplitude - audio.dBFS
             normalized_audio = audio.apply_gain(change_in_dBFS)
@@ -113,7 +122,9 @@ def normalizeSoundTraining(username):
 
 # Normalize the sound of the audio file created in attempts to login
 def normalizeSoundRecognizing(username):
+    # specify average amplitude to normalize the audio to
     avg_amplitude = -20.0  # measured in dBFS (decibels relative to full scale)
+    # normalize and save audio files to their respective directories
     audio = AS.from_file(DATABASE_DIR + username + '/audioComparison/loginAttempt.wav', "wav")
     change_in_dBFS = avg_amplitude - audio.dBFS
     normalized_audio = audio.apply_gain(change_in_dBFS)
@@ -122,16 +133,21 @@ def normalizeSoundRecognizing(username):
 
 # eliminating the ambient noise in the training audio files
 def eliminateAmbienceTraining(username):
+    # specify key directories to be used
     train_source = DATABASE_DIR + username + '/audioTraining/user/'
     validation_source = DATABASE_DIR + username + '/audioValidation/user/'
     source_list = [train_source, validation_source]
+    # initialize counter and recognizer used for background noise cancelling
     i = 0
     recognizer = sr.Recognizer()
+    # loop through source directories and the files within them
     for source in source_list:
         wav_files = os.listdir(source)
         for wav in wav_files:
             i = i + 1
+            # read audio file
             audio_file = sr.AudioFile(source + wav)
+            # adjust audio to cancel background audio
             with audio_file as sound:
                 recognizer.adjust_for_ambient_noise(sound, duration=0.5)
                 adjusted_audio = recognizer.record(sound)
@@ -143,8 +159,11 @@ def eliminateAmbienceTraining(username):
 
 # eliminating the ambient noise in the recognition audio file
 def eliminateAmbienceRecognizing(username):
+    # initialize recognizer used to adjust for background noise
     recognizer = sr.Recognizer()
+    # read audio file
     audio_file = sr.AudioFile(DATABASE_DIR + username + '/audioComparison/loginAttempt.wav')
+    # adjust audio to cancel background noise
     with audio_file as source:
         recognizer.adjust_for_ambient_noise(source, duration=0.5)
         adjusted_audio = recognizer.record(source)
@@ -154,45 +173,18 @@ def eliminateAmbienceRecognizing(username):
             file.write(adjusted_audio.get_wav_data())
 
 
-# Normalize the sound of all audio files for non-user spectrogram data
-def normalizeSoundRandSpectro():
-    source = ROOT_DIR + '/randomSpectrograms/'
-    avg_amplitude = -20.0  # measured in dBFS (decibels relative to full scale)
-    wav_files = os.listdir(source)
-    for wav in wav_files:
-        audio = AS.from_file(source + wav, "wav")
-        change_in_dBFS = avg_amplitude - audio.dBFS
-        normalized_audio = audio.apply_gain(change_in_dBFS)
-        normalized_audio.export(source + wav, format='wav')
-
-
-# eliminate background noise for all audio files for non-user spectrogram data
-def eliminateAmbienceRandSpectro():
-    source = ROOT_DIR + '/randomSpectrograms/'
-    i = 0
-    recognizer = sr.Recognizer()
-    wav_files = os.listdir(source)
-    for wav in wav_files:
-        i = i + 1
-        audio_file = sr.AudioFile(source + wav)
-        with audio_file as sound:
-            recognizer.adjust_for_ambient_noise(sound, duration=0.5)
-            adjusted_audio = recognizer.record(sound)
-
-            # write adjusted audio to a WAV file
-            with open(source + wav, "wb") as file:
-                file.write(adjusted_audio.get_wav_data())
-
-
 # create spectrograms for all aoudio files of non-users
 def nonuserSpectrograms():
     # fetch directory to where non-user spectrogram are saved
     source = ROOT_DIR + '/randomSpectrograms/'
+    # initialize counter
     i = 0
     wav_files = os.listdir(source)
+    # loop through audio files in source directory
     for wav in wav_files:
         # reading audio files of speaker
         sr, audio = read(source + wav)
+        # create a spectrogram with extracted features from audio file
         freq, times, spectrogram = signal.spectrogram(audio, sr, nfft=512)
         plt.pcolormesh(times, freq, 10*np.log10(spectrogram))
         fig = plt.imshow(spectrogram, aspect='auto', origin='lower',
