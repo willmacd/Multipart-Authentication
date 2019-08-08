@@ -135,7 +135,7 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                         name: req.body.name,
                         trainDir: imgTrainDir,
                         validationDir: imgValidationDir,
-                        modelDir: "./models/" + req.body.name + "/",
+                        modelDir: "./models/",
                         audioTrainDir: audioTrainDir,
                         audioValidationDir: audioValidationDir,
                         subscription: subscription,
@@ -209,7 +209,7 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                                     res.redirect("/");
                                     let trainShell = new PythonShell ('./python/merge_train.py');
                                     trainShell.send(JSON.stringify({name: req.body.name, audioTrainDir: audioTrainDir, audioValidationDir: audioValidationDir,
-                                        imageTrainDir: imgTrainDir, imageValidationDir: imgValidationDir, epochs: null, img_model: null, audio_model: null}));
+                                        imageTrainDir: imgTrainDir, imageValidationDir: imgValidationDir, epochs: null, model: null}));
                                     trainShell.on('message', (message) => {
                                         if(message === 'done') {
                                             console.log("Training is Complete");
