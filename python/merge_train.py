@@ -7,7 +7,7 @@ import json
 
 import tensorflow as tf
 from tensorflow.keras import Sequential, Model
-from tensorflow.keras.layers import concatenate, Activation, Dense, Dropout, BatchNormalization, PReLU
+from tensorflow.keras.layers import Concatenate, Activation, Dense, Dropout, BatchNormalization, PReLU
 
 from data_processing import normalizeSoundTraining, eliminateAmbienceTraining, trainingSpectrogram
 
@@ -100,7 +100,7 @@ def train():
     ##################
 
     # check if input model exists
-    if data['img_model'] is None and data['audio_model'] is None:
+    if data['model'] is None:
         # create new model
         IMG_SHAPE = (image_size, image_size, 3)
         SPECT_SHAPE = (spect_size, spect_size, 3)
@@ -143,123 +143,156 @@ def train():
                             loss='binary_crossentropy',
                             metrics=['accuracy'])
 
+        # Start with training the model with the base model frozen
+        if data["epochs"] is None:
+            # if no epochs were specified, set to arbitrary values
+            img_epochs = 10
+            audio_epochs = 5
+        else:
+            img_epochs = int(data["epochs"])
+            audio_epochs = int(data["epochs"])
+
+        # initialize setps_per_epoch and validation_steps for both models
+        img_steps_per_epoch = imgTrain_generator.n
+        img_validation_steps = imgValidation_generator.n
+        audio_steps_per_epoch = audioTrain_generator.n
+        audio_validation_steps = audioValidation_generator.n
+
+        # train the face recognition model with MobileNetV2 base still frozen
+        img_history = img_model.fit_generator(imgTrain_generator,
+                                              steps_per_epoch=img_steps_per_epoch,
+                                              epochs=img_epochs,
+                                              workers=4,
+                                              validation_data=imgValidation_generator,
+                                              validation_steps=img_validation_steps)
+
+        # train the voice recognition model with MobileNetV2 base still frozen
+        audio_history = audio_model.fit_generator(audioTrain_generator,
+                                                  steps_per_epoch=audio_steps_per_epoch,
+                                                  epochs=audio_epochs,
+                                                  workers=4,
+                                                  validation_data=audioValidation_generator,
+                                                  validation_steps=audio_validation_steps)
+
+        # unfreeze the lower levels of the audio and image networks
+        base_model_img.trainable = True
+        base_model_audio.trainable = True
+
+        # define the layers at which we will unfreeze
+        fine_tune_at = 100
+
+        # keep all layers before the 'fine_tune_at' frozen for both audio and visual model
+        for layer in base_model_img.layers[:fine_tune_at]:
+            layer.trainable = False
+        for layer in base_model_audio.layers[:fine_tune_at]:
+            layer.trainable = False
+
+        # recompile the img_model after having unfrozen the lower levels
+        img_model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=2e-5),
+                          loss='binary_crossentropy',
+                          metrics=['accuracy'])
+
+        # recompile the audio_model after having unfrozen the lower levels
+        audio_model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=2e-5),
+                            loss='binary_crossentropy',
+                            metrics=['accuracy'])
+
+        # train the recompiled img_model with unfrozen MobileNetV2 base model
+        img_tune_history = img_model.fit_generator(imgTrain_generator,
+                                                   steps_per_epoch=img_steps_per_epoch,
+                                                   epochs=img_epochs,
+                                                   workers=4,
+                                                   validation_data=imgValidation_generator,
+                                                   validation_steps=img_validation_steps)
+
+        # train the recompiled audio_model with unfrozen MobileNetV2 base model
+        audio_tune_history = audio_model.fit_generator(audioTrain_generator,
+                                                       steps_per_epoch=audio_steps_per_epoch,
+                                                       epochs=audio_epochs,
+                                                       workers=4,
+                                                       validation_data=audioValidation_generator,
+                                                       validation_steps=audio_validation_steps)
+
+        ######################
+        # Concatenate models #
+        ######################
+
+        # concatenate use img_model and audio_model output tensors as inputs to a concatenation layer
+        merged_output = Concatenate([img_model.output, audio_model.output])
+
+        # pass concatenated outputs through series of layers
+        layer = BatchNormalization()(merged_output)
+        layer = Dense(300)(layer)
+        layer = PReLU()(layer)
+        layer = Dropout(0.8)(layer)
+        layer = Dense(1)(layer)
+        layer = BatchNormalization()(layer)
+        out = Activation('sigmoid')(layer)
+
+        # create a new model from the concatenated output tensors of the individual audio and img models
+        concat_model = Model([img_model.input, audio_model.input], [out])
+
+        # compile the concatenated model
+        concat_model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=0.0001),
+                             loss='binary_crossentropy',
+                             metrics=['accuracy'])
+
+        # if no models previously exist save the concatenated model to the './models/' directory
+        if os.listdir("./models") is None:
+            print("Finished training, saving model...")
+
+            # save the concatenated model containing the multi-modality of face and voice recognition
+            if os.path.exists("./models/"):
+                date = time.time()
+                print("Saving new model to: ../models/" + str(date) + ".h5")
+                concat_model.save("./models/" + str(date) + ".h5")
+            else:
+                os.makedirs("./models/")
+                date = time.time()
+                print("Saving new model to: ../models/" + str(date) + ".h5")
+                concat_model.save("./models/" + str(date) + ".h5")
+            print("done")
+
+        # if there is already one model existing freeze it as the base model and retrain the top layer for new user
+        elif len(os.listdir("./models/")) is 1:
+            # load the existing model
+            existing_model = tf.keras.models.load_model("./models/" + str(os.listdir("./models/")[0]))
+
+            # freeze "existing_model"
+            existing_model.trainable = False
+
+            # todo determine if this works properly through testing
+            # new model built off of the frozen base voice model
+            new_model = tf.keras.Sequential([
+                existing_model,
+                merged_output,
+                BatchNormalization(),
+                Dense(300),
+                PReLU(),
+                Dropout(0.8),
+                Dense(1),
+                BatchNormalization(),
+                Activation('sigmoid')
+            ])
+
+            # compile the newly built model
+            new_model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=0.0001),
+                              loss='binary_crossentropy',
+                              metrics=['accuracy'])
+
+    # todo complete the logical case for PythonShell being passed an already existing model
     else:
         # load input model
-        img_model = tf.keras.models.load_model(str(data['img_model']))
-        audio_model = tf.keras.models.load_model(str(data['audio_model']))
+        passed_model = tf.keras.models.load_model(str(data['model']))
 
-    # Start with training the model with the base model frozen
-    if data["epochs"] is None:
-        # if no epochs were specified, set to arbitrary values
-        img_epochs = 10
-        audio_epochs = 5
-    else:
-        img_epochs = int(data["epochs"])
-        audio_epochs = int(data["epochs"])
+        # if no models exist
+        if os.listdir("./models/") is None:
 
-    # initialize setps_per_epoch and validation_steps for both models
-    img_steps_per_epoch = imgTrain_generator.n
-    img_validation_steps = imgValidation_generator.n
-    audio_steps_per_epoch = audioTrain_generator.n
-    audio_validation_steps = audioValidation_generator.n
-
-    # train the face recognition model with MobileNetV2 base still frozen
-    img_history = img_model.fit_generator(imgTrain_generator,
-                                          steps_per_epoch=img_steps_per_epoch,
-                                          epochs=img_epochs,
-                                          workers=4,
-                                          validation_data=imgValidation_generator,
-                                          validation_steps=img_validation_steps)
-
-    # train the voice recognition model with MobileNetV2 base still frozen
-    audio_history = audio_model.fit_generator(audioTrain_generator,
-                                              steps_per_epoch=audio_steps_per_epoch,
-                                              epochs=audio_epochs,
-                                              workers=4,
-                                              validation_data=audioValidation_generator,
-                                              validation_steps=audio_validation_steps)
-
-    # unfreeze the lower levels of the audio and image networks
-    base_model_img.trainable = True
-    base_model_audio.trainable = True
-
-    # define the layers at which we will unfreeze
-    fine_tune_at = 100
-
-    # keep all layers before the 'fine_tune_at' frozen for both audio and visual model
-    for layer in base_model_img.layers[:fine_tune_at]:
-        layer.trainable = False
-    for layer in base_model_audio.layers[:fine_tune_at]:
-        layer.trainable = False
-
-    # recompile the img_model after having unfrozen the lower levels
-    img_model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=2e-5),
-                      loss='binary_crossentropy',
-                      metrics=['accuracy'])
-
-    # recompile the audio_model after having unfrozen the lower levels
-    audio_model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=2e-5),
-                        loss='binary_crossentropy',
-                        metrics=['accuracy'])
-
-    # train the recompiled img_model with unfrozen MobileNetV2 base model
-    img_tune_history = img_model.fit_generator(imgTrain_generator,
-                                               steps_per_epoch=img_steps_per_epoch,
-                                               epochs=img_epochs,
-                                               workers=4,
-                                               validation_data=imgValidation_generator,
-                                               validation_steps=img_validation_steps)
-
-    # train the recompiled audio_model with unfrozen MobileNetV2 base model
-    audio_tune_history = audio_model.fit_generator(audioTrain_generator,
-                                                   steps_per_epoch=audio_steps_per_epoch,
-                                                   epochs=audio_epochs,
-                                                   workers=4,
-                                                   validation_data=audioValidation_generator,
-                                                   validation_steps=audio_validation_steps)
-
-    ######################
-    # Concatenate models #
-    ######################
-
-    # concatenate use img_model and audio_model output tensors as inputs to a concatenation layer
-    merged_output = concatenate([img_model.output, audio_model.output])
-
-    # pass concatenated outputs through series of layers
-    layer = BatchNormalization()(merged_output)
-    layer = Dense(300)(layer)
-    layer = PReLU()(layer)
-    layer = Dropout(0.8)(layer)
-    layer = Dense(1)(layer)
-    layer = BatchNormalization()(layer)
-    out = Activation('sigmoid')(layer)
-
-    # create a new model from the concatenated output tensors of the individual audio and img models
-    concat_model = Model([img_model.input, audio_model.input], [out])
-
-    # compile the concatenated model
-    concat_model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=0.0001),
-                         loss='binary_crossentropy',
-                         metrics=['accuracy'])
-
-    print("Finished training, saving model...")
-
-    # save the concatenated model containing the multi-modality of face and voice recognition
-    if data['img_model'] is None or data['audio_model'] is None:
-        if os.path.exists("./models/" + str(data['name']) + "/"):
             date = time.time()
-            print("Saving new model to: ../models/" + name + "/" + str(date) + ".h5")
-            concat_model.save("./models/" + name + "/" + str(date) + ".h5")
+            passed_model.save("./models/" + str(date) + ".h5")
         else:
-            os.makedirs("./models/" + name + "/")
-            date = time.time()
-            print("Saving new model to: ../models/" + name + "/" + str(date) + ".h5")
-            concat_model.save("./models/" + name + "/" + str(date) + ".h5")
-    else:
-        concat_model.save(data['img_model'])
-        concat_model.save(data['audio_model'])
-
-    print("done")
+            existing_model = os.listdir("./models/")
+            existing_base_model = tf.keras.models.load_model("./models/" + str(existing_model[0]))
 
 
 if __name__ == '__main__':
