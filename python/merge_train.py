@@ -7,7 +7,7 @@ import json
 
 import tensorflow as tf
 from tensorflow.keras import Sequential, Model
-from tensorflow.keras.layers import concatenate, Activation, Dense, Dropout, BatchNormalization, PReLU
+from tensorflow.keras.layers import concatenate, Activation, Dense, Dropout, PReLU, Flatten
 
 from data_processing import normalizeSoundTraining, eliminateAmbienceTraining, trainingSpectrogram
 
@@ -134,12 +134,12 @@ def train():
         ])
 
         # compile the newly built face model
-        img_model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=0.0001),
+        img_model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=0.0025),
                           loss='binary_crossentropy',
                           metrics=['accuracy'])
 
         # compile the newly built voice model
-        audio_model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=0.0001),
+        audio_model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=0.0025),
                             loss='binary_crossentropy',
                             metrics=['accuracy'])
 
@@ -193,12 +193,12 @@ def train():
         layer.trainable = False
 
     # recompile the img_model after having unfrozen the lower levels
-    img_model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=2e-5),
+    img_model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=0.0001),
                       loss='binary_crossentropy',
                       metrics=['accuracy'])
 
     # recompile the audio_model after having unfrozen the lower levels
-    audio_model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=2e-5),
+    audio_model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=0.0001),
                         loss='binary_crossentropy',
                         metrics=['accuracy'])
 
@@ -223,22 +223,23 @@ def train():
     ######################
 
     # concatenate use img_model and audio_model output tensors as inputs to a concatenation layer
-    merged_output = concatenate([img_model.output, audio_model.output])
+    merged_output = concatenate([img_model.output, audio_model.output], axis=-1)
 
+    # todo determine if this code segment is necessary
     # pass concatenated outputs through series of layers
-    layer = BatchNormalization()(merged_output)
-    layer = Dense(300)(layer)
+    layer = Flatten()(merged_output)
+    layer = Dense(128)(layer)
     layer = PReLU()(layer)
     layer = Dropout(0.8)(layer)
     layer = Dense(1)(layer)
-    layer = BatchNormalization()(layer)
+    layer = Flatten()(layer)
     out = Activation('sigmoid')(layer)
 
     # create a new model from the concatenated output tensors of the individual audio and img models
-    concat_model = Model([img_model.input, audio_model.input], [out])
+    concat_model = Model(inputs=[img_model.input, audio_model.input], outputs=[merged_output])
 
     # compile the concatenated model
-    concat_model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=0.0001),
+    concat_model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=0.0025),
                          loss='binary_crossentropy',
                          metrics=['accuracy'])
 
