@@ -57,7 +57,7 @@ def recognize():
     spectrogram = resizeSpectro[np.newaxis, :, :, :]
 
     # output a prediction percentage for the spectrogram matching the user specified
-    prediction = model.predict([image, spectrogram], steps=1)
+    prediction = model.predict([image, spectrogram], steps=3)
     percentage = prediction[0][0] * 100
 
     # if the percentage is greater than the specified threshold allow access, otherwise deny access
