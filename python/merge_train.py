@@ -236,7 +236,7 @@ def train():
     out = Activation('sigmoid')(layer)
 
     # create a new model from the concatenated output tensors of the individual audio and img models
-    concat_model = Model(inputs=[img_model.input, audio_model.input], outputs=[merged_output])
+    concat_model = Model(inputs=[img_model.input, audio_model.input], outputs=[out])
 
     # compile the concatenated model
     concat_model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=0.0025),
