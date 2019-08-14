@@ -228,20 +228,13 @@ def train():
     # todo determine if this code segment is necessary
     # pass concatenated outputs through series of layers
     layer = Flatten()(merged_output)
-    layer = Dense(128)(layer)
-    layer = PReLU()(layer)
-    layer = Dropout(0.8)(layer)
-    layer = Dense(1)(layer)
+    layer = Dense(2, activation='relu')(layer)
+    layer = Dense(1, activation='linear')(layer)
     layer = Flatten()(layer)
     out = Activation('sigmoid')(layer)
 
     # create a new model from the concatenated output tensors of the individual audio and img models
     concat_model = Model(inputs=[img_model.input, audio_model.input], outputs=[out])
-
-    # compile the concatenated model
-    concat_model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=0.0025),
-                         loss='binary_crossentropy',
-                         metrics=['accuracy'])
 
     print("Finished training, saving model...")
 

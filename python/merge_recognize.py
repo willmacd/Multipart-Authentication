@@ -12,7 +12,7 @@ import tensorflow as tf
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 # set threshold for authentication
-threshold = 50   # subject to change later in development
+threshold = 59   # subject to change later in development
 
 # fetch data passed through PythonShell from app.js
 lines = sys.stdin.readline()
