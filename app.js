@@ -127,8 +127,8 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                 if (results.length === 0) {
                     console.log("Creating new directory in Database for user");
                     let parentDir = "./users/" + req.body.name + "/";
-                    let imgTrainDir = parentDir + "imgTraining/";
-                    let imgValidationDir = parentDir + "imgValidation/";
+                    let imgTrainDir = parentDir + "faceTraining/";
+                    let imgValidationDir = parentDir + "faceValidation/";
                     let audioValidationDir = parentDir + "audioValidation/";
                     let audioTrainDir = parentDir + "audioTraining/";
                     let data = {
