@@ -151,12 +151,10 @@ function startup() {
     captureBtn.click(function (ev) {
         capturing = !capturing;
         if (capturing) {
-            switchBtn.disable = true;
             audioBtn.attr("disabled", true);
             loginBtn.disabled = true;
             captureBtn.html("Capturing...")
         } else {
-            switchBtn.disable = false;
             audioBtn.attr("disable", false);
             loginBtn.disabled = true;
             captureBtn.html("Recognize Face")

@@ -156,12 +156,10 @@ function startup() {
     captureBtn.click(function (ev) {
         capturing = !capturing;
         if (capturing) {
-            switchBtn.disabled = true;
             audioBtn.attr("disabled", true);
             uploadBtn.attr("disabled", false);
             captureBtn.html(pictures.length + "/" + pNum + " Images <span class='spinner-border spinner-border-sm' role='status' aria-hidden='true'></span>");
         } else {
-            switchBtn.disabled = false;
             audioBtn.attr("disabled", false);
             uploadBtn.attr("disabled", false);
             captureBtn.html("Start Scanning Face");
