@@ -267,12 +267,12 @@ def train():
             new_model = tf.keras.Sequential([
                 existing_model,
                 merged_output,
-                BatchNormalization(),
-                Dense(300),
+                Flatten(),
+                Dense(8),
                 PReLU(),
                 Dropout(0.8),
                 Dense(1),
-                BatchNormalization(),
+                Flatten(),
                 Activation('sigmoid')
             ])
 
