@@ -74,7 +74,7 @@ function startup() {
                 $("#loadWrapper").addClass("collapse-anim");
                 $("#loadLabel").hide();
                 collapse.collapse('show');
-                loginBtn.disabled = true;
+                loginBtn.disabled = false;
             }).then(() => {
                 setInterval(() => {
                     if (capturing && face.length < 1) {
