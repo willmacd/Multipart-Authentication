@@ -90,11 +90,13 @@ function startup() {
                         // pass captured frame into face detection
                         detectFaces(frame).then((result) => {
                             if (capturing) {
+                                audioBtn.attr("disabled", true);
                                 // check if a face is detected
                                 if (result.data.length > 0) {
                                     $("#status").addClass("text-success");
                                     $("#status").removeClass("text-danger");
                                     $("#status").html("Face Detected");
+                                    switchBtn.disabled = true;
                                     crop(result.image.toDataURL('image/jpg'), result.data[0])
                                         .then((image) => {
                                             face.push(image);
@@ -110,6 +112,7 @@ function startup() {
                                     $("#status").removeClass("test-success");
                                     $("#status").addClass("text-danger");
                                     $("#status").html("Face Not Detected");
+                                    switchBtn.disabled = false;
                                 }
                             }
                         })
@@ -124,7 +127,8 @@ function startup() {
                     if (face.length >= 1) {
                         if (!recording) {
                             capturing = false;
-                            switchBtn.disabled = false;
+                            captureBtn.attr("disabled", true);
+                            switchBtn.disabled = true;
                             audioBtn.attr("disabled", false);
                             loginBtn.disabled = false;
                         }
@@ -151,12 +155,10 @@ function startup() {
     captureBtn.click(function (ev) {
         capturing = !capturing;
         if (capturing) {
-            switchBtn.disable = true;
             audioBtn.attr("disabled", true);
             loginBtn.disabled = true;
             captureBtn.html("Capturing...")
         } else {
-            switchBtn.disable = false;
             audioBtn.attr("disable", false);
             loginBtn.disabled = true;
             captureBtn.html("Recognize Face")
