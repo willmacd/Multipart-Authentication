@@ -74,7 +74,7 @@ function startup() {
                 $("#loadWrapper").addClass("collapse-anim");
                 $("#loadLabel").hide();
                 collapse.collapse('show');
-                loginBtn.disabled = false;
+                loginBtn.disabled = true;
             }).then(() => {
                 setInterval(() => {
                     if (capturing && face.length < 1) {
@@ -90,11 +90,13 @@ function startup() {
                         // pass captured frame into face detection
                         detectFaces(frame).then((result) => {
                             if (capturing) {
+                                audioBtn.attr("disabled", true);
                                 // check if a face is detected
                                 if (result.data.length > 0) {
                                     $("#status").addClass("text-success");
                                     $("#status").removeClass("text-danger");
                                     $("#status").html("Face Detected");
+                                    switchBtn.disabled = true;
                                     crop(result.image.toDataURL('image/jpg'), result.data[0])
                                         .then((image) => {
                                             face.push(image);
@@ -110,6 +112,7 @@ function startup() {
                                     $("#status").removeClass("test-success");
                                     $("#status").addClass("text-danger");
                                     $("#status").html("Face Not Detected");
+                                    switchBtn.disabled = false;
                                 }
                             }
                         })
@@ -117,7 +120,7 @@ function startup() {
                         if (!recording) {
                             capturing = false;
                             switchBtn.disable = false;
-                            audioBtn.attr("disable", false);
+                            audioBtn.attr("disabled", false);
                             loginBtn.disable = false;
                         }
                     }
@@ -129,7 +132,8 @@ function startup() {
                             loginBtn.disabled = false;
                         }
                         captureBtn.html("Image captured");
-                        captureBtn.attr("disable", false);
+                        switchBtn.disabled = true;
+                        captureBtn.attr("disabled", true);
                     }
                 }, 500)
             });

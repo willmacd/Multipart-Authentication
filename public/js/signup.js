@@ -102,11 +102,13 @@ function startup() {
                         // pass frame into face detector
                         detectFaces(frame).then((result) => {
                             if (capturing) {
+                                audioBtn.attr("disabled", true);
                                 // check if face is detected
                                 if (result.data.length > 0) {
                                     $("#status").addClass("text-success");
                                     $("#status").removeClass("text-danger");
                                     $("#status").html("Face Detected");
+                                    switchBtn.disabled = true;
                                     crop(result.image.toDataURL('image/jpg'), result.data[0])
                                         .then((image) => {
                                             pictures.push(image);
@@ -124,6 +126,7 @@ function startup() {
                                     $("#status").removeClass("text-success");
                                     $("#status").addClass("text-danger");
                                     $("#status").html("Face Not Detected");
+                                    switchBtn.disabled = false;
                                 }
                             }
                         })
@@ -144,6 +147,7 @@ function startup() {
                             uploadBtn.attr("disabled", false);
                         }
                         captureBtn.html("Done!");
+                        switchBtn.disabled = true;
                         captureBtn.attr("disabled", true);
                     }
                 }, 500)
