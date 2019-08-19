@@ -219,6 +219,8 @@ function startup() {
         // if the user isnt missing any data fields continue with login
         if(!errors) {
             loginBtn.attr("disabled", true);
+            //set the cursor to progress wheel while user is being identified
+            $('body').addClass('waiting');
             //post request sending all collected data to app.js
             $.ajax({
                 url: '/api/login',
@@ -231,6 +233,8 @@ function startup() {
                 },
                 success: function(response) {
                     console.log(response);
+                    // if response is successful end the progress wheel
+                    $('body').removeClass('waiting');
                     // if response starts with [MATCH] send pop up to indicate access has been granted
                     if (response.startsWith('[MATCH]')) {
                         window.alert("[ACCESS GRANTED] Both face and voice of login request match");
@@ -249,6 +253,8 @@ function startup() {
                 },
                 errors: function(exception) {
                     console.log(exception);
+                    //if there is an error returned from the server side end the progress wheel
+                    $('body').removeClass('waiting');
                     // indicate to user if the account they are trying to sign in as is not an existing account
                     if (exception.responseText.startsWith("Account does not exist, ")){
                         let msg = "Account name does not exist";
