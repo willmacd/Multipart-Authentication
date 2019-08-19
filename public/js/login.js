@@ -223,7 +223,7 @@ function startup() {
                     name: $("#name").val(),
                     image: face,
                     audio: voice,
-                    model: './models/' + $("#name").val()
+                    model: './models/'
                 },
                 success: function(response) {
                     console.log(response);

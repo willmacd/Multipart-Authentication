@@ -212,12 +212,13 @@ def train():
 
         # if there is already one model existing freeze it as the base model and retrain the top layer for new user
         elif len(os.listdir("./models/")) is 1:
+            # todo determine why global model can only be trained with 2 users
             # load the existing model
-            existing_model = tf.keras.models.load_model("./models/" + str(os.listdir("./models/")[0]))
+            model_list = os.listdir('./models/')
+            existing_model = tf.keras.models.load_model("./models/" + model_list[0])
 
-            # delete the existing model as the new global model will be saved at the end of training
-            del_existing_model = "./models/" + str(os.listdir("./models/")[0])
-            os.unlink(del_existing_model)
+            # set a variable to the existing model for deletion once new model is being created
+            del_existing_model = "./models/" + model_list[0]
 
             # cut the top concatenation layers out and break model down into its two base layers for retraining
             img_base_model = Model(existing_model.input[0], existing_model.layers[-8].output)
@@ -229,12 +230,14 @@ def train():
 
             # create a new image model to build off the existing img_base_model
             img_model = Sequential([
-                img_base_model
+                img_base_model,
+                tf.keras.layers.Dense(1, activation="sigmoid")
             ])
 
             # create a new audio mode to build off the existing audio_base_model
             audio_model = Sequential([
-                audio_base_model
+                audio_base_model,
+                tf.keras.layers.Dense(1, activation="sigmoid")
             ])
 
             # compile the newly built face model
@@ -309,6 +312,9 @@ def train():
                                                           validation_data=audioValidation_generator,
                                                           validation_steps=audio_validation_steps)
 
+            # delete the existing model as the new global model will be saved at the end of training
+            os.unlink(del_existing_model)
+
         # concatenate use img_model and audio_model output tensors as inputs to a concatenation layer
         merged_output = concatenate([img_model.output, audio_model.output], axis=-1)
 
@@ -326,8 +332,6 @@ def train():
         concat_model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=0.0025),
                              loss='binary_crossentropy',
                              metrics=['accuracy'])
-
-        # if no models previously exist save the concatenated model to the './models/' directory
 
         print("Finished training, saving model...")
         # save the concatenated model containing the multi-modality of face and voice recognition
