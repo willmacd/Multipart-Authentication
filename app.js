@@ -40,7 +40,7 @@ MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true }, (err, client)
                                     console.log("Users models deleted");
                                     db.collection('users').deleteOne({ "name": name });
                                     console.log("User removed from database");
-                                    if (fs.readdirSync("./users/").length === 0){
+                                    if (fs.readdirSync("./users/").length === 0 && fs.readdirSync("./models/").length !== 0){
                                         console.log("No more existing users, Deleting Global Model");
                                         rimraf.sync("./models/" + fs.readdirSync("./models/"))
                                     }
