@@ -12,7 +12,7 @@ import tensorflow as tf
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 # set threshold for authentication
-threshold = 55   # subject to change later in development
+threshold = 50   # subject to change later in development
 
 # fetch data passed through PythonShell from app.js
 lines = sys.stdin.readline()
@@ -57,7 +57,7 @@ def recognize():
     spectrogram = resizeSpectro[np.newaxis, :, :, :]
 
     # output a prediction percentage for the spectrogram matching the user specified
-    prediction = model.predict([image, spectrogram], steps=3)
+    prediction = model.predict([image, spectrogram])
     percentage = prediction[0][0] * 100
 
     # if the percentage is greater than the specified threshold allow access, otherwise deny access
