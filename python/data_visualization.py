@@ -13,11 +13,9 @@ DATABASE_DIR = ROOT_DIR + 'users/'
 def visualize_audio(username):
     for i in os.listdir(DATABASE_DIR + username + '/audio/'):
         wav_file = wave.open(DATABASE_DIR + username + '/audio/' + str(i), 'r')
-
         # Extract raw audio from wav file
         signal = wav_file.readframes(-1)
         signal = np.fromstring(signal, 'Int16')
-
         # Plot
         plt.figure(1)
         plt.title('Original Signal ' + str(i))
@@ -29,11 +27,9 @@ def visualize_audio(username):
 
     for i in os.listdir(DATABASE_DIR + username + '/audio/'):
         wav_file = wave.open(DATABASE_DIR + username + '/audio/' + str(i), 'r')
-
         # Extract raw audio from wav file
         signal = wav_file.readframes(-1)
         signal = np.fromstring(signal, 'Int16')
-
         # Plot
         plt.figure(1)
         plt.title('Processed Signal ' + str(i))
@@ -41,6 +37,6 @@ def visualize_audio(username):
         plt.show()
 
 
-if __name__ == '__main__':
-    visualize_audio("JohnDoe")
+'''if __name__ == '__main__':
+    visualize_audio("JohnDoe")'''
 

@@ -19,7 +19,6 @@ name = str(data['name'])
 def process_spectro(username):
     # specify path to loginAttempt.wav file
     path = DATABASE_DIR + username + '/audioComparison/loginAttempt.wav'
-
     # ensure that loginAttempt audio file is in '.wav' format (will work for multiple audio files as well)
     kind = filetype.guess(path)
     if kind.extension != "wav":
@@ -37,5 +36,5 @@ def process_spectro(username):
     print("done")
 
 
-if __name__ == "__main__":
-    process_spectro(name)
+'''if __name__ == "__main__":
+    process_spectro(name)'''

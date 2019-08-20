@@ -62,10 +62,8 @@ def recognize():
 
     # if the percentage is greater than the specified threshold allow access, otherwise deny access
     if percentage >= threshold:
-        authentication = True
         print("[MATCH] Face and voice detected is predicted to match " + name + "'s ==> " + str(percentage))
     else:
-        authentication = False
         print("[CONFLICT] Face and voice detected does not match " + name + "'s ==> " + str(percentage))
 
 
