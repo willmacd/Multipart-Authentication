@@ -7,6 +7,7 @@ import json
 
 import tensorflow as tf
 from tensorflow.keras import Sequential, Model
+from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.layers import concatenate, Activation, Dense, Dropout, PReLU, Flatten
 
 from data_processing import normalizeSoundTraining, eliminateAmbienceTraining, trainingSpectrogram
@@ -14,8 +15,7 @@ from data_processing import normalizeSoundTraining, eliminateAmbienceTraining, t
 # setting size variables
 image_size = 160
 spect_size = 240
-img_batch_size = 5
-audio_batch_size = 4
+batch_size = 10
 
 # fetch data passed through PythonShell from app.js
 lines = sys.stdin.readline()
@@ -73,26 +73,26 @@ def train():
     audioTrain_generator = train_datagen.flow_from_directory(
         audioTrainingDir,
         target_size=(spect_size, spect_size),
-        batch_size=audio_batch_size,
+        batch_size=batch_size,
         class_mode='binary')
 
     audioValidation_generator = validation_datagen.flow_from_directory(
         audioValidationDir,
         target_size=(spect_size, spect_size),
-        batch_size=audio_batch_size,
+        batch_size=batch_size,
         class_mode='binary')
 
     # create a training and validation generator for face recognition
     imgTrain_generator = train_datagen.flow_from_directory(
         imageTrainingDir,
         target_size=(image_size, image_size),
-        batch_size=img_batch_size,
+        batch_size=batch_size,
         class_mode='binary')
 
     imgValidation_generator = validation_datagen.flow_from_directory(
         imageValidationDir,
         target_size=(image_size, image_size),
-        batch_size=img_batch_size,
+        batch_size=batch_size,
         class_mode='binary')
 
     ##################
@@ -134,12 +134,12 @@ def train():
         ])
 
         # compile the newly built face model
-        img_model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=0.0025),
+        img_model.compile(optimizer=Adam(lr=0.001),
                           loss='binary_crossentropy',
                           metrics=['accuracy'])
 
         # compile the newly built voice model
-        audio_model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=0.0025),
+        audio_model.compile(optimizer=Adam(lr=0.001),
                             loss='binary_crossentropy',
                             metrics=['accuracy'])
 
@@ -151,8 +151,8 @@ def train():
     # Start with training the model with the base model frozen
     if data["epochs"] is None:
         # if no epochs were specified, set to arbitrary values
-        img_epochs = 10
-        audio_epochs = 5
+        img_epochs = 15
+        audio_epochs = 15
     else:
         img_epochs = int(data["epochs"])
         audio_epochs = int(data["epochs"])
@@ -193,12 +193,12 @@ def train():
         layer.trainable = False
 
     # recompile the img_model after having unfrozen the lower levels
-    img_model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=0.0001),
+    img_model.compile(optimizer=Adam(lr=0.0001),
                       loss='binary_crossentropy',
                       metrics=['accuracy'])
 
     # recompile the audio_model after having unfrozen the lower levels
-    audio_model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=0.0001),
+    audio_model.compile(optimizer=Adam(lr=0.0001),
                         loss='binary_crossentropy',
                         metrics=['accuracy'])
 
@@ -225,7 +225,6 @@ def train():
     # concatenate use img_model and audio_model output tensors as inputs to a concatenation layer
     merged_output = concatenate([img_model.output, audio_model.output], axis=-1)
 
-    # todo determine if this code segment is necessary
     # pass concatenated outputs through series of layers
     layer = Flatten()(merged_output)
     layer = Dense(2, activation='relu')(layer)
