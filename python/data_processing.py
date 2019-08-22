@@ -17,7 +17,6 @@ DATABASE_DIR = ROOT_DIR + '/users/'
 def trimWavFile(originPath, outputPath):
     # desired length of audio file (in milliseconds
     timeSplit = 3000
-
     # check duration of specified wave file
     wav = wave.open(originPath, 'r')
     frameRate = wav.getframerate()
@@ -64,12 +63,6 @@ def trainingSpectrogram(username):
             os.rename(username + str(i) + '.png', source + username + str(i) + '.png')
             os.unlink(source + wav)
             i = i + 1
-            # fig.axes.get_xaxis().set_visible(True)
-            # fig.axes.get_yaxis().set_visible(True)
-            # plt.title("Spectrogram of " + username + wav)
-            # plt.xlabel('Time [sec]')
-            # plt.ylabel('Frequency [Hz]')
-            # plt.show()
 
 
 # create a spectrogram for each the login attempt wav file
@@ -91,12 +84,6 @@ def recognizeSpectrogram(username):
     plt.savefig('loginAttempt.png', bbox_inches='tight', dpi=300, transparent=True, pad_inches=0.0)
     os.rename('loginAttempt.png', source + 'loginAttempt.png')
     os.unlink(source + 'loginAttempt.wav')
-    # fig.axes.get_xaxis().set_visible(True)
-    # fig.axes.get_yaxis().set_visible(True)
-    # plt.title("Spectrogram of " + username + " loginAttempt.wav")
-    # plt.xlabel('Time [sec]')
-    # plt.ylabel('Frequency [Hz]')
-    # plt.show()
 
 
 # Normalize the sound of all audio files for training data
@@ -151,7 +138,6 @@ def eliminateAmbienceTraining(username):
             with audio_file as sound:
                 recognizer.adjust_for_ambient_noise(sound, duration=0.5)
                 adjusted_audio = recognizer.record(sound)
-
                 # write adjusted audio to a WAV file
                 with open(source + wav, "wb") as file:
                     file.write(adjusted_audio.get_wav_data())
@@ -167,7 +153,6 @@ def eliminateAmbienceRecognizing(username):
     with audio_file as source:
         recognizer.adjust_for_ambient_noise(source, duration=0.5)
         adjusted_audio = recognizer.record(source)
-
         # write adjusted audio to a WAV file
         with open(DATABASE_DIR + username + '/audioComparison/loginAttempt.wav', "wb") as file:
             file.write(adjusted_audio.get_wav_data())
@@ -195,9 +180,3 @@ def nonuserSpectrograms():
         os.rename("spectro" + str(i) + '.png', source + "spectro" + str(i) + '.png')
         os.unlink(source + wav)
         i = i + 1
-        # fig.axes.get_xaxis().set_visible(True)
-        # fig.axes.get_yaxis().set_visible(True)
-        # plt.title("Spectrogram of " + username + wav)
-        # plt.xlabel('Time [sec]')
-        # plt.ylabel('Frequency [Hz]')
-        # plt.show()
