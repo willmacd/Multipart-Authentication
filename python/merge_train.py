@@ -15,7 +15,7 @@ from data_processing import normalizeSoundTraining, eliminateAmbienceTraining, t
 # setting size variables
 image_size = 160
 spect_size = 240
-batch_size = 10
+batch_size = 3
 
 # fetch data passed through PythonShell from app.js
 lines = sys.stdin.readline()
@@ -134,12 +134,12 @@ def train():
         ])
 
         # compile the newly built face model
-        img_model.compile(optimizer=Adam(lr=0.001),
+        img_model.compile(optimizer=Adam(lr=0.001, epsilon=1.0, decay=0.01),
                           loss='binary_crossentropy',
                           metrics=['accuracy'])
 
         # compile the newly built voice model
-        audio_model.compile(optimizer=Adam(lr=0.001),
+        audio_model.compile(optimizer=Adam(lr=0.001, epsilon=1.0, decay=0.01),
                             loss='binary_crossentropy',
                             metrics=['accuracy'])
 
@@ -193,12 +193,12 @@ def train():
         layer.trainable = False
 
     # recompile the img_model after having unfrozen the lower levels
-    img_model.compile(optimizer=Adam(lr=0.0001),
+    img_model.compile(optimizer=Adam(lr=0.00025, epsilon=1.0, decay=0.01),
                       loss='binary_crossentropy',
                       metrics=['accuracy'])
 
     # recompile the audio_model after having unfrozen the lower levels
-    audio_model.compile(optimizer=Adam(lr=0.0001),
+    audio_model.compile(optimizer=Adam(lr=0.00025, epsilon=1.0, decay=0.01),
                         loss='binary_crossentropy',
                         metrics=['accuracy'])
 
