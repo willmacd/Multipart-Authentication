@@ -107,45 +107,45 @@ def train():
         IMG_SHAPE = (image_size, image_size, 3)
         SPECT_SHAPE = (spect_size, spect_size, 3)
 
-        if len(os.listdir("./models/")) is 0:
-            # Create a base model for face recognition from the pre-trained model MobileNet V2
-            base_model_img = tf.keras.applications.MobileNetV2(input_shape=IMG_SHAPE,
-                                                               include_top=False,
-                                                               weights='imagenet')
+        # Create a base model for face recognition from the pre-trained model MobileNet V2
+        base_model_img = tf.keras.applications.MobileNetV2(input_shape=IMG_SHAPE,
+                                                           include_top=False,
+                                                           weights='imagenet')
 
-            # Create a base model for voice recognition from the pre-trained model MobileNetV2
-            base_model_audio = tf.keras.applications.MobileNetV2(input_shape=SPECT_SHAPE,
-                                                                 include_top=False,
-                                                                 weights='imagenet')
+        # Create a base model for voice recognition from the pre-trained model MobileNetV2
+        base_model_audio = tf.keras.applications.MobileNetV2(input_shape=SPECT_SHAPE,
+                                                             include_top=False,
+                                                             weights='imagenet')
 
-            # freeze base models
-            base_model_img.trainable = False
-            base_model_audio.trainable = False
+        # freeze base models
+        base_model_img.trainable = False
+        base_model_audio.trainable = False
 
-            # new model built off of the frozen base face model
-            img_model = tf.keras.Sequential([
-                base_model_img,
-                tf.keras.layers.GlobalAveragePooling2D(),
-                tf.keras.layers.Dense(1, activation='sigmoid')
-            ])
+        # new model built off of the frozen base face model
+        img_model = tf.keras.Sequential([
+            base_model_img,
+            tf.keras.layers.GlobalAveragePooling2D(),
+            tf.keras.layers.Dense(1, activation='sigmoid')
+        ])
 
-            # new model built off of the frozen base voice model
-            audio_model = tf.keras.Sequential([
-                base_model_audio,
-                tf.keras.layers.GlobalAveragePooling2D(),
-                tf.keras.layers.Dense(1, activation='sigmoid')
-            ])
+        # new model built off of the frozen base voice model
+        audio_model = tf.keras.Sequential([
+            base_model_audio,
+            tf.keras.layers.GlobalAveragePooling2D(),
+            tf.keras.layers.Dense(1, activation='sigmoid')
+        ])
 
-            # compile the newly built face model
-            img_model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=0.0025),
-                              loss='binary_crossentropy',
-                              metrics=['accuracy'])
+        # compile the newly built face model
+        img_model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=0.0025),
+                          loss='binary_crossentropy',
+                          metrics=['accuracy'])
 
-            # compile the newly built voice model
-            audio_model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=0.0025),
+        # compile the newly built voice model
+        audio_model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=0.0025),
                             loss='binary_crossentropy',
                             metrics=['accuracy'])
 
+        if len(os.listdir("./models/")) is 0:
             # Start with training the model with the base model frozen
             if data["epochs"] is None:
                 # if no epochs were specified, set to arbitrary values
@@ -215,6 +215,20 @@ def train():
             # todo determine why global model can only be trained with 2 users
             # load the existing model
             model_list = os.listdir('./models/')
+
+            # concatenate use img_model and audio_model output tensors as inputs to a concatenation layer
+            merged_output = concatenate([img_model.output, audio_model.output], axis=-1)
+
+            # pass concatenated outputs through series of layers
+            layer = Flatten()(merged_output)
+            layer = Dense(2, activation='relu')(layer)
+            layer = Dense(1, activation='linear')(layer)
+            layer = Flatten()(layer)
+            out = Activation('sigmoid')(layer)
+
+            # create a new model from the concatenated output tensors of the individual audio and img models
+            existing_model = Model(inputs=[img_model.input, audio_model.input], outputs=[out])
+
             existing_model = tf.keras.models.load_model("./models/" + model_list[0])
 
             # set a variable to the existing model for deletion once new model is being created
@@ -273,7 +287,7 @@ def train():
                                                       validation_data=audioValidation_generator,
                                                       validation_steps=audio_validation_steps)
 
-            # unfreeze lower levels of face and voice base models
+            '''# unfreeze lower levels of face and voice base models
             img_model.trainable = True
             audio_model.trainable = True
 
@@ -310,7 +324,7 @@ def train():
                                                           epochs=audio_epochs,
                                                           workers=4,
                                                           validation_data=audioValidation_generator,
-                                                          validation_steps=audio_validation_steps)
+                                                          validation_steps=audio_validation_steps)'''
 
             # delete the existing model as the new global model will be saved at the end of training
             os.unlink(del_existing_model)
