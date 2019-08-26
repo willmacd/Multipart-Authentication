@@ -134,12 +134,12 @@ def train():
         ])
 
         # compile the newly built face model
-        img_model.compile(optimizer=Adam(lr=0.001, epsilon=1.0, decay=0.01),
+        img_model.compile(optimizer=Adam(lr=0.00175, epsilon=1.0, decay=0.01),
                           loss='binary_crossentropy',
                           metrics=['accuracy'])
 
         # compile the newly built voice model
-        audio_model.compile(optimizer=Adam(lr=0.001, epsilon=1.0, decay=0.01),
+        audio_model.compile(optimizer=Adam(lr=0.00175, epsilon=1.0, decay=0.01),
                             loss='binary_crossentropy',
                             metrics=['accuracy'])
 

@@ -36,5 +36,5 @@ def process_spectro(username):
     print("done")
 
 
-'''if __name__ == "__main__":
-    process_spectro(name)'''
+if __name__ == "__main__":
+    process_spectro(name)
